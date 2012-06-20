@@ -21,7 +21,7 @@ defined('_JEXEC') or die('Restricted access');
 			<input type="text" name="data[shipping][shipping_params][origination_postcode]" value="<?php echo @$this->element->shipping_params->origination_postcode; ?>" />
 		</td>
 	</tr>
-	
+
 	<tr>
 		<td class="key">
 			<label for="data[shipping][shipping_params][account_number]">
@@ -193,8 +193,8 @@ defined('_JEXEC') or die('Restricted access');
 					$i++;
 					$varName=strtolower($method['name']);
 					$varName=str_replace(' ','_', $varName);
-					$selMethods = unserialize(@$this->element->shipping_params->methodsList); 
-					
+					$selMethods = unserialize(@$this->element->shipping_params->methodsList);
+
 				?>
 				<input name="data[shipping_methods][<?php echo $varName;?>][name]" type="checkbox" value="<?php echo $varName;?>" <?php echo (!empty($selMethods[$varName])?'checked="checked"':''); ?>/><?php echo $method['name'].' ('.@$method['countries'].')'; ?><br/>
 			<?php } ?>
@@ -207,11 +207,11 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<?php 
-			$options = array("FEDEX_BOX"=>"FedEx Box", "FEDEX_PAK"=>"FedEx Pak", "FEDEX_TUBE"=>"FedEx Tube", "YOUR_PACKAGING"=>"Your Packaging"); 
-			$opts = array(); 
+			<?php
+			$options = array("FEDEX_BOX"=>"FedEx Box", "FEDEX_PAK"=>"FedEx Pak", "FEDEX_TUBE"=>"FedEx Tube", "YOUR_PACKAGING"=>"Your Packaging");
+			$opts = array();
 			foreach($options as $key=>$value){
-				$opts[] = @JHTML::_('select.option',$key,$value); 
+				$opts[] = @JHTML::_('select.option',$key,$value);
 			}
 
 			echo JHTML::_('select.genericlist',$opts,"data[shipping][shipping_params][packaging_type]" , '', 'value', 'text', @$this->element->shipping_params->packaging_type); ?>
@@ -303,5 +303,15 @@ defined('_JEXEC') or die('Restricted access');
 					echo 'checked="checked"';
 				}
 				?> value="1" />
+		</td>
+	</tr>
+		<tr>
+		<td class="key">
+			<label for="data[shipping][shipping_params][group_package]">
+				<?php echo JText::_( 'GROUP_PACKAGE' ); ?>
+			</label>
+		</td>
+		<td>
+			<?php echo JHTML::_('select.booleanlist', "data[shipping][shipping_params][group_package]" , '',@$this->element->shipping_params->group_package	); ?>
 		</td>
 	</tr>
