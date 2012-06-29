@@ -165,13 +165,21 @@ class plgHikashopshippingFedEx extends JPlugin
 
 					$sep = '';
 					if(@$rate->shipping_params->show_eta) {
-						if($method['delivery_day']!=-1){
-							$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_day']);
-						}else{
-							$rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
+						if(@$rate->shipping_params->show_eta_delay) {
+							if($method['delivery_delay']!=-1 && $method['day']>0){
+								$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_delay']);
+							}else{
+								$rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
+							}
+						} else {
+							if($method['delivery_day']!=-1 && $method['day']>0){
+								$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_day']);
+							}else{
+								$rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
+							}
 						}
 						$sep = '<br/>';
-						if($method['delivery_time']!=-1){
+						if($method['delivery_time']!=-1 && $method['day']>0){
 							$rates[$i]->shipping_description.=$sep.JText::sprintf( 'DELIVERY_HOUR', $method['delivery_time']);
 						}else{
 							$rates[$i]->shipping_description.=$sep.JText::_( 'NO_DELIVERY_HOUR');
@@ -849,13 +857,18 @@ class plgHikashopshippingFedEx extends JPlugin
 						$code = $v['code'];
 					}
 				}
+				$delayType = hikashop_get('type.delay');
+				$timestamp = strtotime($response->RateReplyDetails->DeliveryTimestamp);
+
 				$shipment[] = array(
-					'value'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Amount,
-					'code'=>$code,
-					'delivery_day'=>date("m/d/Y",strtotime($response->RateReplyDetails->DeliveryTimestamp)),
-					'delivery_time'=>date("H:i:s",strtotime($response->RateReplyDetails->DeliveryTimestamp)),
-					'currency_code'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
-					'old_currency_code'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
+					'value' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Amount,
+					'code' => $code,
+					'delivery_timestamp' => $timestamp,
+					'delivery_day' => date("m/d/Y", $timestamp),
+					'delivery_delay' => $delayType->displayDelay($timestamp - strtotime('now')),
+					'delivery_time' => date("H:i:s", $timestamp),
+					'currency_code' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
+					'old_currency_code' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
 					'notes' => $notes
 				);
 			}

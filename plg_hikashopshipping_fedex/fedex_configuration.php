@@ -165,6 +165,20 @@ defined('_JEXEC') or die('Restricted access');
 	</tr>
 	<tr>
 		<td class="key">
+			<label for="data[shipping][shipping_params][show_eta_delay]">
+				<?php echo JText::_( 'FEDEX_SHOW_ETA_DELAY' ); ?>
+			</label>
+		</td>
+		<td>
+			<input class="inputbox" type="checkbox" name="data[shipping][shipping_params][show_eta_delay]" <?php
+				if (@$this->element->shipping_params->show_eta_delay=="1") {
+					echo 'checked="checked"';
+				}
+				?> value="1" />
+		</td>
+	</tr>
+	<tr>
+		<td class="key">
 			<label for="data[shipping][shipping_params][show_eta_format]">
 				<?php echo JText::_( 'FEDEX_SHOW_ETA_FORMAT' ); ?>
 			</label>
