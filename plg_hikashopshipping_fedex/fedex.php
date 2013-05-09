@@ -1,9 +1,7 @@
 <?php
 defined('_JEXEC') or die('Restricted access');
-?>
-<?php
-class plgHikashopshippingFedEx extends JPlugin
-{
+
+class plgHikashopshippingFedEx extends JPlugin {
 	var $packages;    // array of packages
 	var $packageCount;    // number of packages in this shipment
 	var $fedex_methods = array(
@@ -21,7 +19,7 @@ class plgHikashopshippingFedEx extends JPlugin
 		array('code' => 'INTERNATIONAL_FIRST', 'name' => 'FedEx International First'),
 		array('code' => 'INTERNATIONAL_PRIORITY', 'name' => 'FedEx International Priority'),
 		array('code' => 'INTERNATIONAL_PRIORITY_DISTRIBUTION', 'name' => 'FedEx International Priority Distribution'),
-		array('code' => 'EUROPE_FIRST_INTERNATIONAL_PRIORITY', 'name' => 'FedEx Europe First'),
+		array('code' => 'EUROPE_FIRST_INTERNATIONAL_PRIORITY', 'name' => 'FedEx Europe First')
 	);
 	var $convertUnit=array(
 		'kg' => 'KGS',
@@ -33,9 +31,8 @@ class plgHikashopshippingFedEx extends JPlugin
 		'cm2' => 'cm',
 		'in2' => 'in',
 	);
-
+	public $nbpackage = 0;
 	function onShippingDisplay(&$order,&$dbrates,&$usable_rates,&$messages){
-
 		if(empty($dbrates)){
 			$messages['no_rates'] = JText::_('NO_SHIPPING_METHOD_FOUND');
 		}else{
@@ -44,7 +41,6 @@ class plgHikashopshippingFedEx extends JPlugin
 				if($rate->shipping_type=='fedex')
 					$rates[]=$rate;
 			}
-
 			if(empty($rates)){
 				$messages['no_rates'] = JText::_('NO_SHIPPING_METHOD_FOUND');
 				return true;
@@ -93,7 +89,7 @@ class plgHikashopshippingFedEx extends JPlugin
 				}
 
 				$this->shipping_currency_id=$currency= hikashop_getCurrency();
-				$db = &JFactory::getDBO();
+				$db = JFactory::getDBO();
 				$query='SELECT currency_code FROM '.hikashop_table('currency').' WHERE currency_id IN ('.$this->shipping_currency_id.')';
 				$db->setQuery($query);
 				$this->shipping_currency_code = $db->loadResult();
@@ -140,15 +136,15 @@ class plgHikashopshippingFedEx extends JPlugin
 					return true;
 				}
 				$i=0;
-				$rate=(PHP_VERSION < 5) ? $rates[0] : clone($rates[0]);
+				$rate=(!HIKASHOP_PHP5) ? $rates[0] : clone($rates[0]);
 				foreach($receivedMethods as $method){
 					$usableMethods[]=$method;
-					$rates[$i]=(PHP_VERSION < 5) ? $rate : clone($rate);
+					$rates[$i]=(!HIKASHOP_PHP5) ? $rate : clone($rate);
 					$rates[$i]->shipping_price=0.0;
 					if(!empty($rate->shipping_params->handling_fees_percent)){
 						$rates[$i]->shipping_price+=$order->total->prices[0]->price_value_with_tax*($rate->shipping_params->handling_fees_percent/100);
 					}
-					$rates[$i]->shipping_price+=$method['value']+$handlingFees;
+					$rates[$i]->shipping_price+=round($method['value']+$handlingFees,2);
 					foreach($this->fedex_methods as $fedex_method){
 						if($method['old_currency_code']=='CAD'){
 							if($fedex_method['code']== $method['code']){
@@ -166,12 +162,14 @@ class plgHikashopshippingFedEx extends JPlugin
 					$sep = '';
 					if(@$rate->shipping_params->show_eta) {
 						if(@$rate->shipping_params->show_eta_delay) {
+							//if not fedex ground method
 							if($method['delivery_delay']!=-1 && $method['day']>0){
 								$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_delay']);
 							}else{
 								$rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
 							}
 						} else {
+							//if not fedex ground method
 							if($method['delivery_day']!=-1 && $method['day']>0){
 								$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_day']);
 							}else{
@@ -193,6 +191,8 @@ class plgHikashopshippingFedEx extends JPlugin
 							}
 						}
 					}
+					if($rate->shipping_params->group_package && $this->nbpackage>0)
+						$rates[$i]->shipping_description.='<br/>'.JText::sprintf('X_PACKAGES', $this->nbpackage);
 					$i++;
 				}
 				foreach($rates as $i => $rate){
@@ -213,26 +213,29 @@ class plgHikashopshippingFedEx extends JPlugin
 		$this->categoryType = hikashop_get('type.categorysub');
 		$this->categoryType->type = 'tax';
 		$this->categoryType->field = 'category_id';
-		$bar = & JToolBar::getInstance('toolbar');
+
 		if(empty($elements)){
-			$element = null;
+			$element = new stdClass();
 			$element->shipping_name='FedEx';
 			$element->shipping_description='';
 			$element->group_package=0;
 			$element->shipping_images='fedex';
 			$element->shipping_type=$this->fedex;
-			$element->shipping_params=null;
+			$element->shipping_params=new stdClass();
 			$element->shipping_params->post_code='';
 			$element->shipping_currency_id = $this->main_currency;
 			$element->shipping_params->pickup_type='01';
 			$element->shipping_params->destination_type='auto';
 			$elements = array($element);
 		}
-		JToolBarHelper::save();
-		JToolBarHelper::apply();
-		$bar->appendButton( 'Link', 'cancel', JText::_('HIKA_CANCEL'), hikashop_completeLink('plugins&plugin_type=shipping') );
-		JToolBarHelper::divider();
-		$bar->appendButton( 'Pophelp','shipping-'.$this->fedex.'-form');
+		$this->toolbar = array(
+				'save',
+				'apply',
+				array('name' => 'link', 'icon'=> 'cancel', 'alt' => JText::_('HIKA_CANCEL'),'url'=>hikashop_completeLink('plugins&plugin_type=shipping')),
+				'|',
+				array('name' => 'pophelp', 'target' =>'shipping-'.$this->fedex.'-form')
+			);
+
 		hikashop_setTitle(JText::_('HIKASHOP_SHIPPING_METHOD'),'plugin','plugins&plugin_type=shipping&task=edit&name='.$this->fedex);
 		$config =& hikashop_config();
 		$this->main_currency = $config->get('main_currency',1);
@@ -245,21 +248,26 @@ class plgHikashopshippingFedEx extends JPlugin
 			jimport('joomla.filesystem.folder');
 			$folder = JLanguage::getLanguagePath(JPATH_ROOT).DS.'overrides';
 
-			$content_override = 'FEDEX_METER_ID="Meter #"'."/r/n".'
-				FEDEX_ACCOUNT_NUMBER="Account #"'."/r/n".'
-				FEDEX_API_KEY="API Key"'."/r/n".'
-				FEDEX_API_PASSWORD="API Password"'."/r/n".'
-				FEDEX_SHOW_ETA="Show ETA?"'."/r/n".'
-				FEDEX_SHOW_ETA_FORMAT="ETA Format"'."/r/n".'
-				PACKAGING_TYPE="Packaging Type"'."/r/n".'
-				BOX_DIMENSIONS="Box Dimensions"'."/r/n".'
-				ORIGINATION_POSTCODE="Ship From Postcode"'."/r/n".'
-				SENDER_COMPANY="Sender Company"'."/r/n".'
-				SENDER_PHONE="Sender Phone"'."/r/n".'
-				SENDER_ADDRESS="Sender Address"'."/r/n".'
-				SENDER_CITY="Sender City"'."/r/n".'
-				SENDER_STATE="Sender State"'."/r/n".'
-				SENDER_POSTCODE="Sender Zip"'."/r/n";
+			$path = $folder.DS.'en-GB.override.ini';
+			$content_override='';
+			if(JFile::exists($path)){
+				$content_override=JFile::read($path);
+			}
+			$content_override .= 'FEDEX_METER_ID="Meter #"'.'
+FEDEX_ACCOUNT_NUMBER="Account #"'.'
+FEDEX_API_KEY="API Key"'.'
+FEDEX_API_PASSWORD="API Password"'.'
+FEDEX_SHOW_ETA="Show ETA?"'.'
+FEDEX_SHOW_ETA_FORMAT="ETA Format"'.'
+PACKAGING_TYPE="Packaging Type"'.'
+BOX_DIMENSIONS="Box Dimensions"'.'
+ORIGINATION_POSTCODE="Ship From Postcode"'.'
+SENDER_COMPANY="Sender Company"'.'
+SENDER_PHONE="Sender Phone"'.'
+SENDER_ADDRESS="Sender Address"'.'
+SENDER_CITY="Sender City"'.'
+SENDER_STATE="Sender State"'.'
+SENDER_POSTCODE="Sender Zip"';
 
 			if(!JFolder::exists($folder)){
 				JFolder::create($folder);
@@ -277,24 +285,24 @@ class plgHikashopshippingFedEx extends JPlugin
 		}
 
 		$js = '
-		function deleteRow(divName,inputName,rowName){
-			var d = document.getElementById(divName);
-			var olddiv = document.getElementById(inputName);
-			if(d && olddiv){
-				d.removeChild(olddiv);
-				document.getElementById(rowName).style.display=\'none\';
-			}
-			return false;
-		}
-		function deleteZone(zoneName){
-			var d = document.getElementById(zoneName);
-			if(d){
-				d.innerHTML="";
-			}
-			return false;
-		}
-		';
-		$doc =& JFactory::getDocument();
+function deleteRow(divName,inputName,rowName){
+	var d = document.getElementById(divName);
+	var olddiv = document.getElementById(inputName);
+	if(d && olddiv){
+		d.removeChild(olddiv);
+		document.getElementById(rowName).style.display=\'none\';
+	}
+	return false;
+}
+function deleteZone(zoneName){
+	var d = document.getElementById(zoneName);
+	if(d){
+		d.innerHTML="";
+	}
+	return false;
+}
+';
+		$doc = JFactory::getDocument();
 	 	$doc->addScriptDeclaration($js);
 	}
 
@@ -302,7 +310,7 @@ class plgHikashopshippingFedEx extends JPlugin
 		$warehouses = JRequest::getVar( 'warehouse', array(), '', 'array' );
 		$cats = array();
 		$methods=array();
-		$db = &JFactory::getDBO();
+		$db = JFactory::getDBO();
 		$zone_keys='';
 		if(isset($_REQUEST['data']['shipping_methods'])){
 			foreach($_REQUEST['data']['shipping_methods'] as $method){
@@ -310,7 +318,7 @@ class plgHikashopshippingFedEx extends JPlugin
 					$name=strtolower($fedexMethod['name']);
 					$name=str_replace(' ','_', $name);
 					if($name==$method['name']){
-						$obj = null;
+						$obj = new stdClass();
 						$methods[strip_tags($method['name'])]=strip_tags($fedexMethod['code']);
 					}
 				}
@@ -369,18 +377,18 @@ class plgHikashopshippingFedEx extends JPlugin
 		$data['sender_phone']=@$rate->shipping_params->sender_phone;
 		$data['sender_address']=@$rate->shipping_params->sender_address;
 		$data['sender_city']=@$rate->shipping_params->sender_city;
-		$state_zone = '';
+			$state_zone = '';
 		$state_zone=@$rate->shipping_params->sender_state;
-		$query="SELECT zone_id, zone_code_3 FROM ".hikashop_table('zone')." WHERE zone_namekey IN ('".$state_zone."')";
-		$db->setQuery($query);
-		$state = $db->loadObject();
+			$query="SELECT zone_id, zone_code_3 FROM ".hikashop_table('zone')." WHERE zone_namekey IN ('".$state_zone."')";
+			$db->setQuery($query);
+			$state = $db->loadObject();
 		$data['sender_state']=$state->zone_code_3;
 		$data['sender_postcode']=$rate->shipping_params->sender_postcode;
 		$data['recipient']=$null->shipping_address;
-		$czone_code = '';
-		$czone_code=$rate->shipping_zone_namekey;
-		$query="SELECT zone_id, zone_code_2 FROM ".hikashop_table('zone')." WHERE zone_namekey IN ('".$czone_code."')";
-		$db->setQuery($query);
+			$czone_code = '';
+			$czone_code=@$rate->shipping_params->sender_country;
+			$query="SELECT zone_id, zone_code_2 FROM ".hikashop_table('zone')." WHERE zone_namekey IN ('".$czone_code."')";
+			$db->setQuery($query);
 		$czone = $db->loadObject();
 		$data['country'] = $czone->zone_code_2;
 
@@ -443,11 +451,46 @@ class plgHikashopshippingFedEx extends JPlugin
 			$data['length']=0;
 			$data['width']=0;
 			$data['price']=0;
+
+			$limitation = array(
+				'length' => 150,
+				'weight' => 119,
+				'dimension' => 300
+			);
+			if(!empty($rate->shipping_params->methods)) {
+				foreach($rate->shipping_params->methods as $k => $v) {
+					$l_lenght = 0; $l_weight = 0; $l_dimension = 0;
+					switch($v) {
+						case 'FEDEX_GROUND':
+							$l_length = 150;
+							$l_weight =108;
+							$l_dimension=165;
+							break;
+						case 'FEDEX_EXPRESS_SAVER':
+							$l_length = 150;
+							$l_weight =119;
+							$l_dimension=130;
+							break;
+					}
+
+					if($l_length > 0 && $limitation['length'] > $l_length) {
+						$limitation['length'] = $l_length;
+					}
+					if($l_weight > 0 && $limitation['weight'] > $l_weight) {
+						$limitation['weight'] = $l_weight;
+					}
+					if($l_dimension > 0 && $limitation['dimension'] > $l_dimension) {
+						$limitation['dimension'] = $l_dimension;
+					}
+				}
+			}
+
 			foreach($order->products as $product){
 				if($product->product_parent_id==0){
 					if(isset($product->variants)){
 						foreach($product->variants as $variant){
 							for($i=0;$i<$variant->cart_product_quantity;$i++){
+								//Calculating total weight and dimension for a package
 								$caracs=$this->_convertCharacteristics($variant, $data);
 								$data['weight_unit']=$caracs['weight_unit'];
 								$data['dimension_unit']=$caracs['dimension_unit'];
@@ -472,13 +515,13 @@ class plgHikashopshippingFedEx extends JPlugin
 									if($y==$caracs['height']) $z=$caracs['width'];
 									else $z=$caracs['height'];
 								}
-								if($data['weight']+round($caracs['weight'],2)>150 || $dim>165){
-									$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order );
+								if($data['weight']+round($caracs['weight'],2)>$limitation['weight'] || $dim>$limitation['dimension'] || $data['width']>$limitation['length']){
+									$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true );
 									//size and weight are reseted to the last package we didn't include
 									$data['weight']=round($caracs['weight'],2);
-									$data['height']=max($data['height'],$y);
-									$data['length']=max($data['length'],$z);
-									$data['width']=max($data['width'],$x);
+									$data['height']=$y;
+									$data['length']=$z;
+									$data['width']=$x;
 									$data['price']=$variant->prices[0]->unit_price->price_value_with_tax;
 								}
 								else{
@@ -492,6 +535,7 @@ class plgHikashopshippingFedEx extends JPlugin
 						}
 					}
 					else{
+						//if the package is too big with the last product, we create a package without this one
 						for($i=0;$i<$product->cart_product_quantity;$i++){
 							$caracs=$this->_convertCharacteristics($product, $data);
 							$x=min($caracs['width'],$caracs['height'],$caracs['length']);
@@ -510,20 +554,20 @@ class plgHikashopshippingFedEx extends JPlugin
 								if($y==$caracs['height']) $z=$caracs['width'];
 								else $z=$caracs['height'];
 							}
-							$caracs=$this->_convertCharacteristics($product, $data);
 							$data['weight_unit']=$caracs['weight_unit'];
 							$data['dimension_unit']=$caracs['dimension_unit'];
 							$tmpHeight=$data['height']+round($caracs['height'],2);
 							$tmpLength=$data['length']+round($caracs['length'],2);
 							$tmpWidth=$data['width']+round($caracs['width'],2);
 							$dim=$tmpLength+2*$tmpWidth+2*$tmpHeight;
-							if($data['weight']+round($caracs['weight'],2)>150 || $dim>165){
-								$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order );
+							if($data['weight']+round($caracs['weight'],2)>$limitation['weight'] || $dim>$limitation['dimension'] || $data['width']>$limitation['length']){
+								$this->nbpackage++;
+								$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true );
 								//size and weight are reseted to the last package we didn't include
 								$data['weight']=round($caracs['weight'],2);
-								$data['height']=max($data['height'],$y);
-								$data['length']=max($data['length'],$z);
-								$data['width']=max($data['width'],$x);
+								$data['height']=$y;
+								$data['length']=$z;
+								$data['width']=$x;
 								$data['price']=$product->prices[0]->unit_price->price_value_with_tax;
 							}
 							else{
@@ -537,8 +581,11 @@ class plgHikashopshippingFedEx extends JPlugin
 					}
 				}
 			}
-			$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order);
-			$usableMethods=$this->_FEDEXrequestMethods($data);
+			if (($data['weight']+$data['height']+$data['length']+$data['width'])>0){
+				$this->nbpackage++;
+				$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true);
+			}
+			$usableMethods=$this->_FEDEXrequestMethods($data,$rate);
 		}
 		else{
 			foreach($order->products as $product){
@@ -563,7 +610,7 @@ class plgHikashopshippingFedEx extends JPlugin
 				}
 			}
 
-			$usableMethods=$this->_FEDEXrequestMethods($data);
+			$usableMethods=$this->_FEDEXrequestMethods($data,$rate);
 
 		}
 		if(empty($usableMethods)){
@@ -573,7 +620,7 @@ class plgHikashopshippingFedEx extends JPlugin
 		foreach($usableMethods as $method){
 			$currencies[$method['currency_code']]='"'.$method['currency_code'].'"';
 		}
-		$db = &JFactory::getDBO();
+		$db = JFactory::getDBO();
 		$query='SELECT currency_code, currency_id FROM '.hikashop_table('currency').' WHERE currency_code IN ('.implode(',',$currencies).')';
 		$db->setQuery($query);
 		$currencyList = $db->loadObjectList();
@@ -675,6 +722,7 @@ class plgHikashopshippingFedEx extends JPlugin
 		$volumeClass=hikashop_get('helper.volume');
 		if(!isset($product->product_dimension_unit_orig)) $product->product_dimension_unit_orig = $product->product_dimension_unit;
 		if(!isset($product->product_weight_unit_orig)) $product->product_weight_unit_orig = $product->product_weight_unit;
+		if(!isset($product->product_weight_orig)) $product->product_weight_orig = $product->product_weight;
 		if($forceUnit){
 			$carac['weight']=$weightClass->convert($product->product_weight_orig, $product->product_weight_unit_orig, 'lb');
 			$carac['weight_unit']='LBS';
@@ -725,12 +773,17 @@ class plgHikashopshippingFedEx extends JPlugin
 		}
 		return $carac;
 	}
-	function _FEDEXrequestMethods($data){
+	function _FEDEXrequestMethods($data,$rate){
 		global $fedex_methods;
 
 		$path_to_wsdl = dirname(__FILE__).DS.'fedex_rate.wsdl';
 
 		ini_set("soap.wsdl_cache_enabled","0");
+		if(!class_exists('SoapClient')){
+			$app = JFactory::getApplication();
+			$app->enqueueMessage('The FEDEW shipping plugin needs the SOAP library installed but it seems that it is not available on your server. Please contact your web hosting to set it up.','error');
+			return false;
+		}
 		$client = new SoapClient($path_to_wsdl, array('exceptions' => false));
 
 
@@ -809,7 +862,9 @@ class plgHikashopshippingFedEx extends JPlugin
 			$request['RequestedShipment']['Recipient'] = $recipient;
 			$request['RequestedShipment']['ShippingChargesPayment'] = $shippingChargesPayment;
 			$request['RequestedShipment']['RateRequestTypes'] = 'ACCOUNT';
-			$request['RequestedShipment']['RateRequestTypes'] = 'LIST';
+			if(empty($rate->shipping_params->rate_types) || $rate->shipping_params->rate_types != 'ACCOUNT'){
+				$request['RequestedShipment']['RateRequestTypes'] = 'LIST';
+			}
 			$request['RequestedShipment']['PackageCount'] = $pkg_count;
 			$request['RequestedShipment']['RequestedPackageLineItems'] = $this->addPackageLineItem($pkg_values);
 
@@ -825,11 +880,11 @@ class plgHikashopshippingFedEx extends JPlugin
 			if(isset($response->HighestSeverity) && $response->HighestSeverity == "ERROR") {
 				static $notif = false;
 				if(!$notif && isset($response->Notifications->Message) && $response->Notifications->Message == 'Authentication Failed') {
-					$app =& JFactory::getApplication();
+					$app = JFactory::getApplication();
 					$app->enqueueMessage('FEDEX Authentication Failed');
 					$notif = true;
 				}
-			//	if($response->Notifications->Message != 'Authentication Failed') {
+			//	if(!empty($response->Notifications->Message) && $response->Notifications->Message != 'Authentication Failed') {
 			//		$app =& JFactory::getApplication();
 			//		$app->enqueueMessage($response->Notifications->Message);
 			//	}
@@ -837,8 +892,7 @@ class plgHikashopshippingFedEx extends JPlugin
 
 			//print_r($response); echo "<BR><BR>";
 
-			if(!empty($response->HighestSeverity) && ($response->HighestSeverity == "SUCCESS" || $response->HighestSeverity == "NOTE"))
-			{
+			if(!empty($response->HighestSeverity) && ($response->HighestSeverity == "SUCCESS" || $response->HighestSeverity == "NOTE")) {
 				$code = '';
 				//echo "<BR><BR><BR>";
 				//echo "<pre>";
@@ -851,31 +905,75 @@ class plgHikashopshippingFedEx extends JPlugin
 					$notes = $response->Notifications;
 				}
 
-				foreach($this->fedex_methods as $k=>$v){
-
+				foreach($this->fedex_methods as $k=>$v) {
 					if($v['code'] == $response->RateReplyDetails->ServiceType){
 						$code = $v['code'];
 					}
 				}
 				$delayType = hikashop_get('type.delay');
-				$timestamp = strtotime($response->RateReplyDetails->DeliveryTimestamp);
+				if(!empty($response->RateReplyDetails->DeliveryTimestamp))
+					$timestamp = strtotime($response->RateReplyDetails->DeliveryTimestamp);
+				else {
+					$timestamp = 0;
+					$response->RateReplyDetails->DeliveryTimestamp=0;
+				}
+				if(is_array($response->RateReplyDetails->RatedShipmentDetails)){
+					$shipment[] = array(
+						'value'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Amount,
+						'code'=>$code,
+						'delivery_timestamp' => $timestamp,
+						'day'=>$response->RateReplyDetails->DeliveryTimestamp,
+						'delivery_day' => date("m/d/Y", $timestamp),
+						'delivery_delay' => $this->displayDelaySECtoDAY($timestamp - strtotime('now'),2),
+						'delivery_time' => date("H:i:s", $timestamp),
+						'currency_code'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
+						'old_currency_code' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
+						'notes' => $notes
+					);
+				}
+			} else if(!empty($response->HighestSeverity) && ($response->HighestSeverity == "ERROR")) {
+				static $errorsDisplayed = array();
 
-				$shipment[] = array(
-					'value' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Amount,
-					'code' => $code,
-					'delivery_timestamp' => $timestamp,
-					'delivery_day' => date("m/d/Y", $timestamp),
-					'delivery_delay' => $delayType->displayDelay($timestamp - strtotime('now')),
-					'delivery_time' => date("H:i:s", $timestamp),
-					'currency_code' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
-					'old_currency_code' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
-					'notes' => $notes
-				);
+				//TODO add error_code+message
+				$acceptedCodes = array(836);
+
+				if(!empty($response->Notifications)) {
+					foreach($response->Notifications as $notif) {
+						if(!is_object($notif))
+							continue;
+						$errorCode = $notif->Code;
+
+						if(!in_array($errorCode, $acceptedCodes)) {
+							if(!isset($errorsDisplayed[$errorCode])) {
+								$app = JFactory::getApplication();
+								$app->enqueueMessage($notif->Message);
+							}
+							$errorsDisplayed[$errorCode] = true;
+						}
+					}
+
+				}
 			}
-
 		}
-
 		return $shipment;
+	}
+	function displayDelaySECtoDAY($value,$type){
+		//min
+		if ( $type == 0 ){
+			$value = (int) $value / 60;
+			$value = round($value);
+		}
+		//hour
+		if ( $type == 1 ){
+			$value = (int) $value / 3600;
+			$value = round($value);
+		}
+		//day
+		if ( $type == 2 ){
+			$value = (int) $value / 86400;
+			$value = round($value);
+		}
+		return $value;
 	}
 	function _currencyConversion(&$usableMethods, &$order){
 		$currency= $this->shipping_currency_id;
@@ -923,7 +1021,7 @@ class plgHikashopshippingFedEx extends JPlugin
 
 	/**
 	 *  Print SOAP Fault
-	 */  
+	 */
 	function printFault($exception, $client) {
 		echo '<h2>Fault</h2>' . "<br>\n";
 		echo "<b>Code:</b>{$exception->faultcode}<br>\n";
@@ -933,15 +1031,14 @@ class plgHikashopshippingFedEx extends JPlugin
 
 	/**
 	 * SOAP request/response logging to a file
-	 */                                  
+	 */
 	function writeToLog($client){
-	if (!$logfile = fopen(TRANSACTIONS_LOG_FILE, "a"))
-	{
-		 error_func("Cannot open " . TRANSACTIONS_LOG_FILE . " file.\n", 0);
-		 exit(1);
-	}
+		if (!$logfile = fopen(TRANSACTIONS_LOG_FILE, "a")) {
+			error_func("Cannot open " . TRANSACTIONS_LOG_FILE . " file.\n", 0);
+			exit(1);
+		}
 
-	fwrite($logfile, sprintf("\r%s:- %s",date("D M j G:i:s T Y"), $client->__getLastRequest(). "\n\n" . $client->__getLastResponse()));
+		fwrite($logfile, sprintf("\r%s:- %s",date("D M j G:i:s T Y"), $client->__getLastRequest(). "\n\n" . $client->__getLastResponse()));
 	}
 
 	/**
@@ -985,23 +1082,23 @@ class plgHikashopshippingFedEx extends JPlugin
 		if($var == 'begindate') Return '2011-05-20';
 		if($var == 'enddate') Return '2011-05-31';
 		if($var == 'address1') Return array('StreetLines' => array('10 Fed Ex Pkwy'),
-				'City' => 'Memphis',
-				'StateOrProvinceCode' => 'TN',
-				'PostalCode' => '38115',
-				'CountryCode' => 'US');
+			'City' => 'Memphis',
+			'StateOrProvinceCode' => 'TN',
+			'PostalCode' => '38115',
+			'CountryCode' => 'US');
 		if($var == 'address2') Return array('StreetLines' => array('13450 Farmcrest Ct'),
-				'City' => 'Herndon',
-				'StateOrProvinceCode' => 'VA',
-				'PostalCode' => '20171',
-				'CountryCode' => 'US');
+			'City' => 'Herndon',
+			'StateOrProvinceCode' => 'VA',
+			'PostalCode' => '20171',
+			'CountryCode' => 'US');
 		if($var == 'locatoraddress') Return array(array('StreetLines'=>'240 Central Park S'),
-				'City'=>'Austin',
-				'StateOrProvinceCode'=>'TX',
-				'PostalCode'=>'78701',
-				'CountryCode'=>'US');
+			'City'=>'Austin',
+			'StateOrProvinceCode'=>'TX',
+			'PostalCode'=>'78701',
+			'CountryCode'=>'US');
 		if($var == 'recipientcontact') Return array('ContactId' => 'arnet',
-				'PersonName' => 'Recipient Contact',
-				'PhoneNumber' => '1234567890');
+			'PersonName' => 'Recipient Contact',
+			'PhoneNumber' => '1234567890');
 		if($var == 'freightaccount') Return 'XXX';
 		if($var == 'freightbilling') Return array(
 			'Contact'=>array(
@@ -1030,8 +1127,7 @@ class plgHikashopshippingFedEx extends JPlugin
 		foreach($notes as $noteKey => $note){
 			if(is_string($note)){
 				echo $noteKey . ': ' . $note . Newline;
-			}
-			else{
+			} else{
 				printNotifications($note);
 			}
 		}
@@ -1046,18 +1142,15 @@ class plgHikashopshippingFedEx extends JPlugin
 	}
 
 	function addPackageLineItem($pkg_values){
-
 		$packageLineItem[] = array();
 		$ct = count($pkg_values);
 		$x = 1;
-		foreach($pkg_values as $pkg)
-		{
+		foreach($pkg_values as $pkg) {
 			if($pkg['PackageWeight']['UnitOfMeasurement']['Code'] == "LBS"){
 				$uom = "LB";
 			} else {
 				$uom = $pkg["PackageWeight"]["UnitOfMeasurement"]['Code'];
 			}
-
 			if(is_array($pkg['Dimensions'])){
 				$dimensions = array("Dimensions"=>array(
 					'Length' => $pkg['Dimensions']['Length'],
@@ -1082,11 +1175,9 @@ class plgHikashopshippingFedEx extends JPlugin
 		return $packageLineItem;
 	}
 
-	function xml2array($contents, $get_attributes = 1, $priority = 'tag')
-	{
+	function xml2array($contents, $get_attributes = 1, $priority = 'tag') {
 		//$contents = "";
-		if (!function_exists('xml_parser_create'))
-		{
+		if (!function_exists('xml_parser_create')) {
 			return array ();
 		}
 		$parser = xml_parser_create('');
@@ -1104,56 +1195,44 @@ class plgHikashopshippingFedEx extends JPlugin
 		$arr = array ();
 		$current = & $xml_array;
 		$repeated_tag_index = array ();
-		foreach ($xml_values as $data)
-		{
+		foreach ($xml_values as $data) {
 			unset ($attributes, $value);
 			extract($data);
 			$result = array ();
 			$attributes_data = array ();
-			if (isset ($value))
-			{
+			if (isset ($value)) {
 				if ($priority == 'tag')
 					$result = $value;
 				else
 					$result['value'] = $value;
 			}
-			if (isset ($attributes) and $get_attributes)
-			{
-				foreach ($attributes as $attr => $val)
-				{
+			if (isset ($attributes) and $get_attributes) {
+				foreach ($attributes as $attr => $val) {
 					if ($priority == 'tag')
 						$attributes_data[$attr] = $val;
 					else
 						$result['attr'][$attr] = $val; //Set all the attributes in a array called 'attr'
 				}
 			}
-			if ($type == "open")
-			{
+			if ($type == "open") {
 				$parent[$level -1] = & $current;
-				if (!is_array($current) or (!in_array($tag, array_keys($current))))
-				{
+				if (!is_array($current) or (!in_array($tag, array_keys($current)))) {
 					$current[$tag] = $result;
 					if ($attributes_data)
 						$current[$tag . '_attr'] = $attributes_data;
 					$repeated_tag_index[$tag . '_' . $level] = 1;
 					$current = & $current[$tag];
-				}
-				else
-				{
-					if (isset ($current[$tag][0]))
-					{
+				} else {
+					if (isset ($current[$tag][0])) {
 						$current[$tag][$repeated_tag_index[$tag . '_' . $level]] = $result;
 						$repeated_tag_index[$tag . '_' . $level]++;
-					}
-					else
-					{
+					} else {
 						$current[$tag] = array (
 							$current[$tag],
 							$result
 						);
 						$repeated_tag_index[$tag . '_' . $level] = 2;
-						if (isset ($current[$tag . '_attr']))
-						{
+						if (isset ($current[$tag . '_attr'])) {
 							$current[$tag]['0_attr'] = $current[$tag . '_attr'];
 							unset ($current[$tag . '_attr']);
 						}
@@ -1161,52 +1240,38 @@ class plgHikashopshippingFedEx extends JPlugin
 					$last_item_index = $repeated_tag_index[$tag . '_' . $level] - 1;
 					$current = & $current[$tag][$last_item_index];
 				}
-			}
-			elseif ($type == "complete")
-			{
-				if (!isset ($current[$tag]))
-				{
+			} elseif ($type == "complete") {
+				if (!isset ($current[$tag])) {
 					$current[$tag] = $result;
 					$repeated_tag_index[$tag . '_' . $level] = 1;
 					if ($priority == 'tag' and $attributes_data)
 						$current[$tag . '_attr'] = $attributes_data;
-				}
-				else
-				{
-					if (isset ($current[$tag][0]) and is_array($current[$tag]))
-					{
+				} else {
+					if (isset ($current[$tag][0]) and is_array($current[$tag])) {
 						$current[$tag][$repeated_tag_index[$tag . '_' . $level]] = $result;
-						if ($priority == 'tag' and $get_attributes and $attributes_data)
-						{
+						if ($priority == 'tag' and $get_attributes and $attributes_data) {
 							$current[$tag][$repeated_tag_index[$tag . '_' . $level] . '_attr'] = $attributes_data;
 						}
 						$repeated_tag_index[$tag . '_' . $level]++;
-					}
-					else
-					{
+					} else {
 						$current[$tag] = array (
 							$current[$tag],
 							$result
 						);
 						$repeated_tag_index[$tag . '_' . $level] = 1;
-						if ($priority == 'tag' and $get_attributes)
-						{
-							if (isset ($current[$tag . '_attr']))
-							{
+						if ($priority == 'tag' and $get_attributes) {
+							if (isset ($current[$tag . '_attr'])) {
 								$current[$tag]['0_attr'] = $current[$tag . '_attr'];
 								unset ($current[$tag . '_attr']);
 							}
-							if ($attributes_data)
-							{
+							if ($attributes_data) {
 								$current[$tag][$repeated_tag_index[$tag . '_' . $level] . '_attr'] = $attributes_data;
 							}
 						}
 						$repeated_tag_index[$tag . '_' . $level]++; //0 and 1 index is already taken
 					}
 				}
-			}
-			elseif ($type == 'close')
-			{
+			} elseif ($type == 'close') {
 				$current = & $parent[$level -1];
 			}
 		}
