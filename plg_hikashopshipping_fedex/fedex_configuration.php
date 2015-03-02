@@ -1,6 +1,7 @@
 <?php
 defined('_JEXEC') or die('Restricted access');
-?>  <input type="hidden" name="lang_file_override" value="<?php echo @$this->element->shipping_params->lang_file_override;?>" />
+?>
+<input type="hidden" name="lang_file_override" value="<?php echo @$this->element->shipping_params->lang_file_override;?>" />
 	<tr>
 		<td class="key">
 			<label for="shipping_tax_id">
@@ -21,7 +22,6 @@ defined('_JEXEC') or die('Restricted access');
 			<input type="text" name="data[shipping][shipping_params][origination_postcode]" value="<?php echo @$this->element->shipping_params->origination_postcode; ?>" />
 		</td>
 	</tr>
-
 	<tr>
 		<td class="key">
 			<label for="data[shipping][shipping_params][account_number]">
@@ -81,6 +81,22 @@ defined('_JEXEC') or die('Restricted access');
 	</tr>
 	<tr>
 		<td class="key">
+			<label for="data[shipping][shipping_params][destination_type]">
+				<?php echo JText::_( 'DESTINATION_TYPE' ); ?>
+			</label>
+		</td>
+		<td>
+			<?php
+				$arr = array(
+					JHTML::_('select.option', 'auto', JText::_('Auto-determination') ),
+					JHTML::_('select.option', 'res', JText::_('Residential Address') ),
+					JHTML::_('select.option', 'com', JText::_('Commercial Address') ),
+				);
+				echo JHTML::_('hikaselect.genericlist', $arr, "data[shipping][shipping_params][destination_type]", 'class="inputbox" size="1"', 'value', 'text', @$this->element->shipping_params->destination_type);
+			?>
+	</tr>
+	<tr>
+		<td class="key">
 			<label for="data[shipping][shipping_params][sender_company]">
 				<?php echo JText::_( 'COMPANY' ); ?>
 			</label>
@@ -133,7 +149,6 @@ defined('_JEXEC') or die('Restricted access');
 			<a class="modal" rel="{handler: 'iframe', size: {x: 760, y: 480}}" href="<?php echo hikashop_completeLink("zone&task=selectchildlisting&type=shipping&subtype=state_zone&map=data[shipping][shipping_params][sender_state]&tmpl=component"); ?>" >
 				<img src="<?php echo HIKASHOP_IMAGES; ?>edit.png"/>
 			</a>
-
 		</td>
 	</tr>
 	<tr>
@@ -150,7 +165,6 @@ defined('_JEXEC') or die('Restricted access');
 			<a class="modal" rel="{handler: 'iframe', size: {x: 760, y: 480}}" href="<?php echo hikashop_completeLink("zone&task=selectchildlisting&type=shipping&subtype=country_zone&map=data[shipping][shipping_params][sender_country]&tmpl=component"); ?>" >
 				<img src="<?php echo HIKASHOP_IMAGES; ?>edit.png"/>
 			</a>
-
 		</td>
 	</tr>
 	<tr>
@@ -163,12 +177,6 @@ defined('_JEXEC') or die('Restricted access');
 			<input type="text" name="data[shipping][shipping_params][sender_postcode]" value="<?php echo @$this->element->shipping_params->sender_postcode; ?>" />
 		</td>
 	</tr>
-	<td>
-</table>
-</fieldset>
-
-<table>
-
 	<tr>
 		<td class="key">
 			<label for="data[shipping][shipping_params][show_notes]">
@@ -236,8 +244,10 @@ defined('_JEXEC') or die('Restricted access');
 				<?php echo JText::_( 'SHIPPING_SERVICES' ); ?>
 			</label>
 		</td>
-		<td>
-			<?php $i=-1; foreach($this->data['fedex_methods'] as $method){
+		<td id="shipping_services_list">
+			<?php
+					echo '<a style="cursor: pointer;" onclick="checkAllBox(\'shipping_services_list\',\'check\');">'.JText::_('SELECT_ALL').'</a> / <a style="cursor: pointer;" onclick="checkAllBox(\'shipping_services_list\',\'uncheck\');">'.JText::_('UNSELECT_ALL').'</a><br/>';
+					$i=-1; foreach($this->data['fedex_methods'] as $method){
 					$i++;
 					$varName=strtolower($method['name']);
 					$varName=str_replace(' ','_', $varName);
@@ -265,7 +275,6 @@ defined('_JEXEC') or die('Restricted access');
 			echo JHTML::_('select.genericlist',$opts,"data[shipping][shipping_params][packaging_type]" , '', 'value', 'text', @$this->element->shipping_params->packaging_type); ?>
 		</td>
 	</tr>
-
 	<tr>
 		<td class="key">
 			<label for="data[shipping][shipping_params][include_price]">
@@ -274,49 +283,6 @@ defined('_JEXEC') or die('Restricted access');
 		</td>
 		<td>
 			<?php echo JHTML::_('hikaselect.booleanlist', "data[shipping][shipping_params][include_price]" , '',@$this->element->shipping_params->include_price	); ?>
-		</td>
-	</tr>
-	<tr>
-		<td class="key">
-			<label for="data[shipping][shipping_params][shipping_min_price]">
-				<?php echo JText::_( 'SHIPPING_MIN_PRICE' ); ?>
-			</label>
-		</td>
-		<td>
-			<input type="text" name="data[shipping][shipping_params][shipping_min_price]" value="<?php echo @$this->element->shipping_params->shipping_min_price; ?>" />
-			<?php  echo $this->data['currency']->currency_code. ' ' .$this->data['currency']->currency_symbol; ?>
-		</td>
-	</tr>
-	<tr>
-		<td class="key">
-			<label for="data[shipping][shipping_params][shipping_max_price]">
-				<?php echo JText::_( 'SHIPPING_MAX_PRICE' ); ?>
-			</label>
-		</td>
-		<td>
-			<input type="text" name="data[shipping][shipping_params][shipping_max_price]" value="<?php echo @$this->element->shipping_params->shipping_max_price; ?>" />
-			<?php  echo $this->data['currency']->currency_code. ' ' .$this->data['currency']->currency_symbol; ?>
-		</td>
-	</tr>
-	<tr>
-		<td class="key">
-			<label for="data[shipping][shipping_params][handling_fees]">
-				<?php echo JText::_( 'UPS_HANDLING_FEES' ); ?>
-			</label>
-		</td>
-		<td>
-			<input type="text" name="data[shipping][shipping_params][handling_fees]" value="<?php echo @$this->element->shipping_params->handling_fees; ?>" />
-			<?php  echo $this->data['currency']->currency_code. ' ' .$this->data['currency']->currency_symbol; ?>
-		</td>
-	</tr>
-	<tr>
-		<td class="key">
-			<label for="data[shipping][shipping_params][handling_fees_percent]">
-				<?php echo JText::_( 'UPS_PERCENTAGE_HANDLING_FEES' ); ?>
-			</label>
-		</td>
-		<td>
-			<input type="text" name="data[shipping][shipping_params][handling_fees_percent]" value="<?php echo @$this->element->shipping_params->handling_fees_percent; ?>" /> %
 		</td>
 	</tr>
 	<tr>
@@ -339,7 +305,7 @@ defined('_JEXEC') or die('Restricted access');
 			<label for="data[shipping][shipping_params][dim_approximation_l]"><?php echo JText::_( 'PRODUCT_LENGTH' ); ?></label> <input size="5" type="text" name="data[shipping][shipping_params][dim_approximation_l]" value="<?php echo @$this->element->shipping_params->dim_approximation_l; ?>" /> x <label for="data[shipping][shipping_params][dim_approximation_w]"><?php echo JText::_( 'PRODUCT_WIDTH' ); ?></label> <input size="5" type="text" name="data[shipping][shipping_params][dim_approximation_w]" value="<?php echo @$this->element->shipping_params->dim_approximation_w; ?>" /> x <label for="data[shipping][shipping_params][dim_approximation_h]"><?php echo JText::_( 'PRODUCT_HEIGHT' ); ?></label> <input size="5" type="text" name="data[shipping][shipping_params][dim_approximation_h]" value="<?php echo @$this->element->shipping_params->dim_approximation_h; ?>" />
 		</td>
 	</tr>
-	 <tr>
+	<tr>
 		<td class="key">
 			<label for="data[shipping][shipping_params][use_dimensions]">
 				<?php echo JText::_( 'FEDEX_USE_BOX_DIMENSION' ); ?>
@@ -353,7 +319,7 @@ defined('_JEXEC') or die('Restricted access');
 				?> value="1" />
 		</td>
 	</tr>
-		<tr>
+	<tr>
 		<td class="key">
 			<label for="data[shipping][shipping_params][group_package]">
 				<?php echo JText::_( 'GROUP_PACKAGE' ); ?>
@@ -363,3 +329,4 @@ defined('_JEXEC') or die('Restricted access');
 			<?php echo JHTML::_('hikaselect.booleanlist', "data[shipping][shipping_params][group_package]" , '',@$this->element->shipping_params->group_package	); ?>
 		</td>
 	</tr>
+</fieldset>

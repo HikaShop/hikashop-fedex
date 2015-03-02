@@ -1,25 +1,28 @@
 <?php
 defined('_JEXEC') or die('Restricted access');
 
-class plgHikashopshippingFedEx extends JPlugin {
+class plgHikashopshippingFedEx extends hikashopShippingPlugin {
+	var $multiple = true;
+	var $name = 'fedex';
+	var $doc_form = 'fedex';
 	var $packages;    // array of packages
 	var $packageCount;    // number of packages in this shipment
 	var $fedex_methods = array(
-		array('code' => 'FEDEX_GROUND', 'name' => 'FedEx Ground', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172') , 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'FEDEX_2_DAY', 'name' => 'FedEx 2 Day', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'FEDEX_EXPRESS_SAVER', 'name' => 'FedEx Express Saver Time Pickup', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'FIRST_OVERNIGHT', 'name' => 'FedEx First Overnight', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'GROUND_HOME_DELIVERY', 'name' => 'FedEx Ground (Home Delivery)', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'PRIORITY_OVERNIGHT', 'name' => 'FedEx Priority Overnight', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'SMART_POST', 'name' => 'FedEx Smart Post', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'STANDARD_OVERNIGHT', 'name' => 'FedEx Standard Overnight', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
-		array('code' => 'INTERNATIONAL_GROUND', 'name' => 'FedEx International Ground'),
-		array('code' => 'INTERNATIONAL_ECONOMY', 'name' => 'FedEx International Economy'),
-		array('code' => 'INTERNATIONAL_ECONOMY_DISTRIBUTION', 'name' => 'FedEx International Economy Distribution'),
-		array('code' => 'INTERNATIONAL_FIRST', 'name' => 'FedEx International First'),
-		array('code' => 'INTERNATIONAL_PRIORITY', 'name' => 'FedEx International Priority'),
-		array('code' => 'INTERNATIONAL_PRIORITY_DISTRIBUTION', 'name' => 'FedEx International Priority Distribution'),
-		array('code' => 'EUROPE_FIRST_INTERNATIONAL_PRIORITY', 'name' => 'FedEx Europe First')
+		array('key'=>1,'code' => 'FEDEX_GROUND', 'name' => 'FedEx Ground', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172') , 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>2,'code' => 'FEDEX_2_DAY', 'name' => 'FedEx 2 Day', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>3,'code' => 'FEDEX_EXPRESS_SAVER', 'name' => 'FedEx Express Saver Time Pickup', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>4,'code' => 'FIRST_OVERNIGHT', 'name' => 'FedEx First Overnight', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>5,'code' => 'GROUND_HOME_DELIVERY', 'name' => 'FedEx Ground (Home Delivery)', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>6,'code' => 'PRIORITY_OVERNIGHT', 'name' => 'FedEx Priority Overnight', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>7,'code' => 'SMART_POST', 'name' => 'FedEx Smart Post', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>8,'code' => 'STANDARD_OVERNIGHT', 'name' => 'FedEx Standard Overnight', 'countries' => 'USA, PUERTO RICO', 'zones' => array('country_United_States_of_America_223','country_Puerto_Rico_172'), 'destinations' => array('country_United_States_of_America_223','country_Puerto_Rico_172')),
+		array('key'=>9,'code' => 'INTERNATIONAL_GROUND', 'name' => 'FedEx International Ground'),
+		array('key'=>10,'code' => 'INTERNATIONAL_ECONOMY', 'name' => 'FedEx International Economy'),
+		array('key'=>11,'code' => 'INTERNATIONAL_ECONOMY_DISTRIBUTION', 'name' => 'FedEx International Economy Distribution'),
+		array('key'=>12,'code' => 'INTERNATIONAL_FIRST', 'name' => 'FedEx International First'),
+		array('key'=>13,'code' => 'INTERNATIONAL_PRIORITY', 'name' => 'FedEx International Priority'),
+		array('key'=>14,'code' => 'INTERNATIONAL_PRIORITY_DISTRIBUTION', 'name' => 'FedEx International Priority Distribution'),
+		array('key'=>15,'code' => 'EUROPE_FIRST_INTERNATIONAL_PRIORITY', 'name' => 'FedEx Europe First')
 	);
 	var $convertUnit=array(
 		'kg' => 'KGS',
@@ -32,217 +35,168 @@ class plgHikashopshippingFedEx extends JPlugin {
 		'in2' => 'in',
 	);
 	public $nbpackage = 0;
-	function onShippingDisplay(&$order,&$dbrates,&$usable_rates,&$messages){
-		if(empty($dbrates)){
-			$messages['no_rates'] = JText::_('NO_SHIPPING_METHOD_FOUND');
-		}else{
-			$rates = array();
-			foreach($dbrates as $k => $rate){
-				if($rate->shipping_type=='fedex')
-					$rates[]=$rate;
-			}
-			if(empty($rates)){
-				$messages['no_rates'] = JText::_('NO_SHIPPING_METHOD_FOUND');
-				return true;
-			}
-			$found = true;
 
-			if(bccomp($order->total->prices[0]->price_value,0,5)){
-
-				$zoneClass=hikashop_get('class.zone');
-				$zones = $zoneClass->getOrderZones($order);
-				foreach($rates as $k => $rate){
-
-					if(!empty($rate->shipping_params->methodsList)){
-						$rate->shipping_params->methods=unserialize($rate->shipping_params->methodsList);
-					}
-					else{
-						$messages['no_shipping_methods_configured'] = 'No shipping methods configured in the FedEx shipping plugin options';
-						return true;
-					}
-					if($order->weight<=0 || ($order->volume<=0 && @$rate->shipping_params->use_dimensions == 1)){
-						return true;
+	function shippingMethods(&$main){
+		$methods = array();
+		if(!empty($main->shipping_params->methodsList)){
+			$main->shipping_params->methods=unserialize($main->shipping_params->methodsList);
+		}
+		if(!empty($main->shipping_params->methods)){
+			foreach($main->shipping_params->methods as $method){
+				$selected = null;
+				foreach($this->fedex_methods as $fedex){
+					if($fedex['code']==$method) {
+						$selected = $fedex;
+						break;
 					}
 				}
-
-				$this->freight=false;
-				$this->classicMethod=false;
-				$heavyProduct=false;
-				$weightTotal=0;
-
-				if(!empty($rate->shipping_params->methods)){
-					foreach($rate->shipping_params->methods as $method){
-						if($method=='TDCB' || $method=='TDA' || $method=='TDO' || $method=='308' || $method=='309' || $method=='310'){
-							$this->freight=true;
-						}
-						else{
-							$this->classicMethod=true;
-						}
-					}
-				}
-
-				$data=null;
-
-				if(empty($order->shipping_address)){
-					$messages['no_shipping_methods_configured'] = 'No shipping address is configured.';
-					return true;
-				}
-
-				$this->shipping_currency_id=$currency= hikashop_getCurrency();
-				$db = JFactory::getDBO();
-				$query='SELECT currency_code FROM '.hikashop_table('currency').' WHERE currency_id IN ('.$this->shipping_currency_id.')';
-				$db->setQuery($query);
-				$this->shipping_currency_code = $db->loadResult();
-				$cart = hikashop_get('class.cart');
-				$null = null;
-				$cart->loadAddress($null,$order->shipping_address->address_id,'object', 'shipping');
-				$currency = hikashop_get('class.currency');
-				$config =& hikashop_config();
-				$this->main_currency = $config->get('main_currency',1);
-				if(empty($rate->shipping_params->handling_fees)){
-					$rate->shipping_params->handling_fees=0;
-				}
-				if($this->shipping_currency_id==$this->main_currency){
-					$price=$order->total->prices[0]->price_value_with_tax;
-					$handlingFees=$rate->shipping_params->handling_fees;
-				}else{
-					$currencyClass = hikashop_get('class.currency');
-					$price=$currencyClass->convertUniquePrice($order->total->prices[0]->price_value_with_tax,$this->shipping_currency_id, $this->main_currency);
-					$handlingFees=$currencyClass->convertUniquePrice($rate->shipping_params->handling_fees, $this->main_currency, $this->shipping_currency_id);
-				}
-				if(empty($rate->shipping_params->shipping_min_price)){
-					$rate->shipping_params->shipping_min_price=0;
-				}else{
-					if($price<$rate->shipping_params->shipping_min_price){
-						$messages['order_total_too_low'] = JText::_('ORDER_TOTAL_TOO_LOW_FOR_SHIPPING_METHODS');
-						return true;
-					}
-				}
-
-				if(empty($rate->shipping_params->shipping_max_price)){
-					$rate->shipping_params->shipping_max_price=0;
-				}else{
-					if($price>$rate->shipping_params->shipping_max_price){
-						$messages['order_total_too_higth'] = JText::_('ORDER_TOTAL_TOO_HIGH_FOR_SHIPPING_METHODS');
-						return true;
-					}
-				}
-
-				foreach($rates as $rate){
-					$receivedMethods=$this->_getRates($rate, $order, $heavyProduct, $null);
-				}
-				if(empty($receivedMethods)){
-					$messages['no_rates'] = JText::_('NO_SHIPPING_METHOD_FOUND');
-					return true;
-				}
-				$i=0;
-				$rate=(!HIKASHOP_PHP5) ? $rates[0] : clone($rates[0]);
-				foreach($receivedMethods as $method){
-					$usableMethods[]=$method;
-					$rates[$i]=(!HIKASHOP_PHP5) ? $rate : clone($rate);
-					$rates[$i]->shipping_price=0.0;
-					if(!empty($rate->shipping_params->handling_fees_percent)){
-						$rates[$i]->shipping_price+=$order->total->prices[0]->price_value_with_tax*($rate->shipping_params->handling_fees_percent/100);
-					}
-					$rates[$i]->shipping_price+=round($method['value']+$handlingFees,2);
-					foreach($this->fedex_methods as $fedex_method){
-						if($method['old_currency_code']=='CAD'){
-							if($fedex_method['code']== $method['code']){
-								$name= $fedex_method['name'];
-							}
-						}else{
-							if($fedex_method['code']== $method['code'] && !isset($fedex_method['double'])){
-								$name= $fedex_method['name'];
-							}
-						}
-					}
-					$rates[$i]->shipping_name=$name;
-					$rates[$i]->shipping_id=$name;
-
-					$sep = '';
-					if(@$rate->shipping_params->show_eta) {
-						if(@$rate->shipping_params->show_eta_delay) {
-							//if not fedex ground method
-							if($method['delivery_delay']!=-1 && $method['day']>0){
-								$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_delay']);
-							}else{
-								$rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
-							}
-						} else {
-							//if not fedex ground method
-							if($method['delivery_day']!=-1 && $method['day']>0){
-								$rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_day']);
-							}else{
-								$rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
-							}
-						}
-						$sep = '<br/>';
-						if($method['delivery_time']!=-1 && $method['day']>0){
-							$rates[$i]->shipping_description.=$sep.JText::sprintf( 'DELIVERY_HOUR', $method['delivery_time']);
-						}else{
-							$rates[$i]->shipping_description.=$sep.JText::_( 'NO_DELIVERY_HOUR');
-						}
-					}
-					if(@$rate->shipping_params->show_notes && !empty($method['notes'])) {
-						foreach($method['notes'] as $note){
-							if($note->Code != '820' && $note->Code != '819' && !empty($note->LocalizedMessage) ) {
-								$rates[$i]->shipping_description.=$sep.implode('<br/>', $note->LocalizedMessage);
-								$sep = '<br/>';
-							}
-						}
-					}
-					if($rate->shipping_params->group_package && $this->nbpackage>0)
-						$rates[$i]->shipping_description.='<br/>'.JText::sprintf('X_PACKAGES', $this->nbpackage);
-					$i++;
-				}
-				foreach($rates as $i => $rate){
-					$usable_rates[]=$rate;
+				if($selected){
+					$methods[$main->shipping_id . '-' . $selected['key']] = $selected['name'];
 				}
 			}
 		}
+		return $methods;
 	}
 
-	function onShippingConfiguration(&$elements){
-		$config =& hikashop_config();
-		$this->main_currency = $config->get('main_currency',1);
-		$currencyClass = hikashop_get('class.currency');
-		$currency = hikashop_getCurrency();
-		$this->fedex = JRequest::getCmd('name','fedex');
+	function onShippingDisplay(&$order,&$dbrates,&$usable_rates,&$messages){
+		if(!hikashop_loadUser())
+			return false;
 
-		$this->currency = hikashop_get('type.currency');
+		$local_usable_rates = array();
+		$local_messages = array();
+		$ret = parent::onShippingDisplay($order, $dbrates, $local_usable_rates, $local_messages);
+		if($ret === false)
+			return false;
+		$currentShippingZone = null;
+		$currentCurrencyId = null;
+		foreach($local_usable_rates as $k => $rate){
+			if(empty($rate->shipping_params->methodsList)) {
+				$messages['no_shipping_methods_configured'] = 'No shipping methods configured in the FedEx shipping plugin options';
+				continue;
+			}
+			$rate->shipping_params->methods = unserialize($rate->shipping_params->methodsList);
+			if($order->weight <= 0 || ($order->volume <= 0 && @$rate->shipping_params->use_dimensions == 1))
+				continue;
+
+			$this->freight = false;
+			$this->classicMethod = false;
+			$heavyProduct = false;
+			$weightTotal = 0;
+			if(!empty($rate->shipping_params->methods)) {
+				foreach($rate->shipping_params->methods as $method) {
+					if($method=='TDCB' || $method=='TDA' || $method=='TDO' || $method=='308' || $method=='309' || $method=='310')
+						$this->freight = true;
+					else
+						$this->classicMethod = true;
+				}
+			}
+
+			$data = null;
+			if(empty($order->shipping_address)) {
+				$messages['no_shipping_methods_configured'] = 'No shipping address is configured.';
+				return true;
+			}
+
+			$this->shipping_currency_id=$currency= hikashop_getCurrency();
+			$db = JFactory::getDBO();
+			$query='SELECT currency_code FROM '.hikashop_table('currency').' WHERE currency_id IN ('.$this->shipping_currency_id.')';
+			$db->setQuery($query);
+			$this->shipping_currency_code = $db->loadResult();
+			$cart = hikashop_get('class.cart');
+			$null = null;
+			$cart->loadAddress($null,$order->shipping_address->address_id,'object', 'shipping');
+			$currency = hikashop_get('class.currency');
+
+			$receivedMethods=$this->_getRates($rate, $order, $heavyProduct, $null);
+			if(empty($receivedMethods)) {
+				$messages['no_rates'] = JText::_('NO_SHIPPING_METHOD_FOUND');
+				continue;
+			}
+			$i = 0;
+			$local_usable_rates = array();
+			foreach($receivedMethods as $method) {
+				$usableMethods[] = $method;
+				$local_usable_rates[$i]=(!HIKASHOP_PHP5) ? $rate : clone($rate);
+				$local_usable_rates[$i]->shipping_price += round($method['value'], 2);
+				$selected_method = '';
+				$name = '';
+				foreach($this->fedex_methods as $fedex_method) {
+					if($fedex_method['code'] == $method['code'] && ($method['old_currency_code'] == 'CAD' || !isset($fedex_method['double']))) {
+						$name = $fedex_method['name'];
+						$selected_method = $fedex_method['key'];
+						break;
+					}
+				}
+				$local_usable_rates[$i]->shipping_name=$name;
+				if(!empty($selected_method))
+					$local_usable_rates[$i]->shipping_id .= '-' . $selected_method;
+				$sep = '';
+				if(@$rate->shipping_params->show_eta) {
+					if(@$rate->shipping_params->show_eta_delay) {
+					//if not fedex ground method
+						if($method['delivery_delay']!=-1 && $method['day']>0){
+							$local_usable_rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_delay']);
+						}else{
+							$local_usable_rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
+						}
+					} else {
+					//if not fedex ground method
+						if($method['delivery_day']!=-1 && $method['day']>0){
+							$local_usable_rates[$i]->shipping_description.=$sep.JText::sprintf( 'ESTIMATED_TIME_AFTER_SEND', $method['delivery_day']);
+						}else{
+							$local_usable_rates[$i]->shipping_description.=$sep.JText::_( 'NO_ESTIMATED_TIME_AFTER_SEND');
+						}
+					}
+					$sep = '<br/>';
+					if($method['delivery_time']!=-1 && $method['day']>0){
+						$local_usable_rates[$i]->shipping_description.=$sep.JText::sprintf( 'DELIVERY_HOUR', $method['delivery_time']);
+					}else{
+						$local_usable_rates[$i]->shipping_description.=$sep.JText::_( 'NO_DELIVERY_HOUR');
+					}
+				}
+				if(@$rate->shipping_params->show_notes && !empty($method['notes'])) {
+					foreach($method['notes'] as $note){
+						if($note->Code != '820' && $note->Code != '819' && !empty($note->LocalizedMessage) ) {
+							$local_usable_rates[$i]->shipping_description.=$sep.implode('<br/>', $note->LocalizedMessage);
+							$sep = '<br/>';
+						}
+					}
+				}
+				if($rate->shipping_params->group_package && $this->nbpackage>0)
+					$local_usable_rates[$i]->shipping_description.='<br/>'.JText::sprintf('X_PACKAGES', $this->nbpackage);
+				$i++;
+			}
+			foreach($local_usable_rates as $i => $finalRate){
+				$usable_rates[$finalRate->shipping_id]=$finalRate;
+			}
+		}
+	}
+	function getShippingDefaultValues(&$element){
+		$element->shipping_name='FedEx';
+		$element->shipping_description='';
+		$element->group_package=0;
+		$element->shipping_images='fedex';
+		$element->shipping_params->post_code='';
+		$element->shipping_currency_id = $this->main_currency;
+		$element->shipping_params->pickup_type='01';
+		$element->shipping_params->destination_type='auto';
+	}
+	function onShippingConfiguration(&$element){
+		$config =& hikashop_config();
+		$this -> main_currency = $config -> get('main_currency', 1);
+		$currencyClass = hikashop_get('class.currency');
+		$currency = hikashop_get('class.currency');
+		$this -> currencyCode = $currency -> get($this -> main_currency)->currency_code;
+		$this -> currencySymbol = $currency -> get($this -> main_currency)->currency_symbol;
+		$this->fedex = JRequest::getCmd('name','fedex');
 		$this->categoryType = hikashop_get('type.categorysub');
 		$this->categoryType->type = 'tax';
 		$this->categoryType->field = 'category_id';
 
-		if(empty($elements)){
-			$element = new stdClass();
-			$element->shipping_name='FedEx';
-			$element->shipping_description='';
-			$element->group_package=0;
-			$element->shipping_images='fedex';
-			$element->shipping_type=$this->fedex;
-			$element->shipping_params=new stdClass();
-			$element->shipping_params->post_code='';
-			$element->shipping_currency_id = $this->main_currency;
-			$element->shipping_params->pickup_type='01';
-			$element->shipping_params->destination_type='auto';
-			$elements = array($element);
-		}
-		$this->toolbar = array(
-				'save',
-				'apply',
-				array('name' => 'link', 'icon'=> 'cancel', 'alt' => JText::_('HIKA_CANCEL'),'url'=>hikashop_completeLink('plugins&plugin_type=shipping')),
-				'|',
-				array('name' => 'pophelp', 'target' =>'shipping-'.$this->fedex.'-form')
-			);
+		parent::onShippingConfiguration($element);
 
-		hikashop_setTitle(JText::_('HIKASHOP_SHIPPING_METHOD'),'plugin','plugins&plugin_type=shipping&task=edit&name='.$this->fedex);
-		$config =& hikashop_config();
-		$this->main_currency = $config->get('main_currency',1);
-		$currency = hikashop_get('class.currency');
-		$this->currency = $currency->get($this->main_currency);
+		$elements = array($element);
 		$key = key($elements);
-
 		if(empty($elements[$key]->shipping_params->lang_file_override)){
 			jimport('joomla.filesystem.file');
 			jimport('joomla.filesystem.folder');
@@ -253,7 +207,8 @@ class plgHikashopshippingFedEx extends JPlugin {
 			if(JFile::exists($path)){
 				$content_override=JFile::read($path);
 			}
-			$content_override .= 'FEDEX_METER_ID="Meter #"'.'
+			$content_override .= '
+FEDEX_METER_ID="Meter #"'.'
 FEDEX_ACCOUNT_NUMBER="Account #"'.'
 FEDEX_API_KEY="API Key"'.'
 FEDEX_API_PASSWORD="API Password"'.'
@@ -283,35 +238,45 @@ SENDER_POSTCODE="Sender Zip"';
 
 			}
 		}
-
-		$js = '
-function deleteRow(divName,inputName,rowName){
-	var d = document.getElementById(divName);
-	var olddiv = document.getElementById(inputName);
-	if(d && olddiv){
-		d.removeChild(olddiv);
-		document.getElementById(rowName).style.display=\'none\';
-	}
-	return false;
-}
-function deleteZone(zoneName){
-	var d = document.getElementById(zoneName);
-	if(d){
-		d.innerHTML="";
-	}
-	return false;
-}
-';
-		$doc = JFactory::getDocument();
-	 	$doc->addScriptDeclaration($js);
+		$js="
+			function checkAllBox(id, type){
+				var toCheck = document.getElementById(id).getElementsByTagName('input');
+				for (i = 0 ; i < toCheck.length ; i++) {
+					if (toCheck[i].type == 'checkbox') {
+						if(type == 'check'){
+							toCheck[i].checked = true;
+						}else{
+							toCheck[i].checked = false;
+						}
+					}
+				}
+			}";
+		if(!HIKASHOP_PHP5) {
+			$doc =& JFactory::getDocument();
+		} else {
+			$doc = JFactory::getDocument();
+		}
+		$doc->addScriptDeclaration( "<!--\n".$js."\n//-->\n" );
 	}
 
-	function onShippingConfigurationSave(&$elements){
-		$warehouses = JRequest::getVar( 'warehouse', array(), '', 'array' );
-		$cats = array();
+	function onShippingConfigurationSave(&$element){
+		$app = JFactory::getApplication();
 		$methods=array();
-		$db = JFactory::getDBO();
-		$zone_keys='';
+		if(empty($element -> shipping_params -> account_number) ||
+			empty($element -> shipping_params -> origination_postcode) ||
+			empty($element -> shipping_params -> meter_id) ||
+			empty($element -> shipping_params -> api_key) ||
+			empty($element -> shipping_params -> api_password) ||
+			empty($element -> shipping_params -> sender_company) ||
+			empty($element -> shipping_params -> sender_phone) ||
+			empty($element -> shipping_params -> sender_address) ||
+			empty($element -> shipping_params -> sender_city) ||
+			empty($element -> shipping_params -> sender_state) ||
+			empty($element -> shipping_params -> sender_country) ||
+			empty($element -> shipping_params -> sender_postcode)
+		 ){
+			$app->enqueueMessage(JText::sprintf('ENTER_INFO', 'FedEx', JText::_('SENDER_INFORMATIONS').' ('. JText::_( 'FEDEX_ORIGINATION_POSTCODE' ).', '.JText::_( 'FEDEX_ACCOUNT_NUMBER' ).', '.JText::_( 'FEDEX_METER_ID' ).', '.JText::_( 'FEDEX_API_KEY' ).', '.JText::_( 'HIKA_PASSWORD' ).', '.JText::_( 'COMPANY' ).', '.JText::_( 'TELEPHONE' ).', '.JText::_( 'ADDRESS' ).', '.JText::_( 'CITY' ).', '.JText::_( 'COUNTRY' ).', '.JText::_( 'POST_CODE' ).')'));
+		}
 		if(isset($_REQUEST['data']['shipping_methods'])){
 			foreach($_REQUEST['data']['shipping_methods'] as $method){
 				foreach($this->fedex_methods as $fedexMethod){
@@ -323,17 +288,10 @@ function deleteZone(zoneName){
 					}
 				}
 			}
+		} else {
+			$app->enqueueMessage(JText::sprintf('CHOOSE_SHIPPING_SERVICE'));
 		}
-		$elements->shipping_params->methodsList = serialize($methods);
-
-		if(empty($cats)){
-			$obj->name = '-';
-			$obj->zip = '-';
-			$obj->country = '-';
-			$obj->zone = '-';
-			$void[]=$obj;
-			$elements->shipping_params->warehousesList = serialize($void);
-		}
+		$element->shipping_params->methodsList = serialize($methods);
 		return true;
 	}
 
@@ -359,11 +317,8 @@ function deleteZone(zoneName){
 		$data['show_eta_format']=@$rate->shipping_params->show_eta_format;
 		$data['packaging_type']=@$rate->shipping_params->packaging_type;
 		$data['include_price']=@$rate->shipping_params->include_price;
-		$data['shipping_min_price']=@$rate->shipping_params->shipping_min_price;
-		$data['shipping_max_price']=@$rate->shipping_params->shipping_max_price;
-		$data['handling_fees']=@$rate->shipping_params->handling_fees;
-		$data['handling_fees_percent']=@$rate->shipping_params->handling_fees_percent;
-		$data['weight_approximation']=@$rate->shipping_params->handling_fees_percent;
+		$data['currency_code']= $this->shipping_currency_code;
+		$data['weight_approximation']=@$rate->shipping_params->weight_approximation;
 		$data['use_dimensions']=@$rate->shipping_params->use_dimensions;
 		$data['dim_approximation_l']=@$rate->shipping_params->dim_approximation_l;
 		$data['dim_approximation_w']=@$rate->shipping_params->dim_approximation_w;
@@ -379,7 +334,7 @@ function deleteZone(zoneName){
 		$data['sender_city']=@$rate->shipping_params->sender_city;
 			$state_zone = '';
 		$state_zone=@$rate->shipping_params->sender_state;
-			$query="SELECT zone_id, zone_code_3 FROM ".hikashop_table('zone')." WHERE zone_namekey IN ('".$state_zone."')";
+			$query="SELECT zone_id, zone_code_3 FROM ".hikashop_table('zone')." WHERE zone_namekey IN (".$db->Quote($state_zone).")";
 			$db->setQuery($query);
 			$state = $db->loadObject();
 		$data['sender_state']=$state->zone_code_3;
@@ -387,19 +342,19 @@ function deleteZone(zoneName){
 		$data['recipient']=$null->shipping_address;
 			$czone_code = '';
 			$czone_code=@$rate->shipping_params->sender_country;
-			$query="SELECT zone_id, zone_code_2 FROM ".hikashop_table('zone')." WHERE zone_namekey IN ('".$czone_code."')";
+			$query="SELECT zone_id, zone_code_2 FROM ".hikashop_table('zone')." WHERE zone_namekey IN (".$db->Quote($czone_code).")";
 			$db->setQuery($query);
 		$czone = $db->loadObject();
 		$data['country'] = $czone->zone_code_2;
 
 		$data['XMLpackage']='';
-		$data['destType']='';
+		/*$data['destType']='';
 		if(@$rate->shipping_params->destination_type=='res'){
 			$data['destType']='<ResidentialAddressIndicator/>';
 		}
 		if(@$rate->shipping_params->destination_type=='auto' && !isset($order->shipping_address->address_company)){
 			$data['destType']='<ResidentialAddressIndicator/>';
-		}
+		}*/
 		$data['pickup_type']=@$rate->shipping_params->pickup_type;
 		$totalPrice=0;
 		if(($this->freight==true && $this->classicMethod==false) || ($heavyProduct==true && $this->freight==true)){
@@ -412,7 +367,8 @@ function deleteZone(zoneName){
 				if($product->product_parent_id==0){
 					if(isset($product->variants)){
 						foreach($product->variants as $variant){
-							$caracs=$this->_convertCharacteristics($variant, $data);
+							//Convert the unit of measurment if it's not the good one
+							$caracs=parent::_convertCharacteristics($variant, $data);
 							$data['weight_unit']=$caracs['weight_unit'];
 							$data['dimension_unit']=$caracs['dimension_unit'];
 							$data['weight']+=round($caracs['weight'],2)*$variant->cart_product_quantity;
@@ -426,7 +382,8 @@ function deleteZone(zoneName){
 						}
 					}
 					else{
-						$caracs=$this->_convertCharacteristics($product,$data);
+						//Convert the unit of measurment if it's not the good one
+						$caracs=parent::_convertCharacteristics($product, $data);
 						$data['weight_unit']=$caracs['weight_unit'];
 						$data['dimension_unit']=$caracs['dimension_unit'];
 						$data['weight']+=round($caracs['weight'],2)*$product->cart_product_quantity;
@@ -451,6 +408,7 @@ function deleteZone(zoneName){
 			$data['length']=0;
 			$data['width']=0;
 			$data['price']=0;
+			$current_package = array();
 
 			$limitation = array(
 				'length' => 150,
@@ -490,45 +448,24 @@ function deleteZone(zoneName){
 					if(isset($product->variants)){
 						foreach($product->variants as $variant){
 							for($i=0;$i<$variant->cart_product_quantity;$i++){
-								//Calculating total weight and dimension for a package
-								$caracs=$this->_convertCharacteristics($variant, $data);
-								$data['weight_unit']=$caracs['weight_unit'];
-								$data['dimension_unit']=$caracs['dimension_unit'];
-								$tmpHeight=$data['height']+round($caracs['height'],2);
-								$tmpLength=$data['length']+round($caracs['length'],2);
-								$tmpWidth=$data['width']+round($caracs['width'],2);
-								$dim=$tmpLength+2*$tmpWidth+2*$tmpHeight;
-								//if the package is too big with the last product, we create a package without this one
-								$x=min($caracs['width'],$caracs['height'],$caracs['length']);
-								if($x==$caracs['width']){
-									$y=min($caracs['height'],$caracs['length']);
-									if($y==$caracs['height']) $z=$caracs['length'];
-									else $z=$caracs['height'];
-								}
-								if($x==$caracs['height']){
-									$y=min($caracs['width'],$caracs['length']);
-									if($y==$caracs['width']) $z=$caracs['length'];
-									else $z=$caracs['width'];
-								}
-								if($x==$caracs['length']){
-									$y=min($caracs['height'],$caracs['width']);
-									if($y==$caracs['height']) $z=$caracs['width'];
-									else $z=$caracs['height'];
-								}
-								if($data['weight']+round($caracs['weight'],2)>$limitation['weight'] || $dim>$limitation['dimension'] || $data['width']>$limitation['length']){
+								//Convert the unit of measurment if it's not the good one
+								$caracs=parent::_convertCharacteristics($variant, $data);
+								//Group package algorithm :
+								$current_package = parent::groupPackages($data, $caracs);
+								if($data['weight']+round($caracs['weight'],2)>$limitation['weight'] || $current_package['dim']>$limitation['dimension'] || $data['width']>$limitation['length']){
 									$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true );
 									//size and weight are reseted to the last package we didn't include
 									$data['weight']=round($caracs['weight'],2);
-									$data['height']=$y;
-									$data['length']=$z;
-									$data['width']=$x;
+									$data['height']=$current_package['y'];
+									$data['length']=$current_package['z'];
+									$data['width']=$current_package['x'];
 									$data['price']=$variant->prices[0]->unit_price->price_value_with_tax;
 								}
 								else{
 									$data['weight']+=round($caracs['weight'],2);
-									$data['height']=max($data['height'],$y);
-									$data['length']=max($data['length'],$z);
-									$data['width']+=$x;
+									$data['height']=max($data['height'],$current_package['y']);
+									$data['length']=max($data['length'],$current_package['z']);
+									$data['width']+=$current_package['x'];
 									$data['price']+=$variant->prices[0]->unit_price->price_value_with_tax;
 								}
 							}
@@ -537,44 +474,25 @@ function deleteZone(zoneName){
 					else{
 						//if the package is too big with the last product, we create a package without this one
 						for($i=0;$i<$product->cart_product_quantity;$i++){
-							$caracs=$this->_convertCharacteristics($product, $data);
-							$x=min($caracs['width'],$caracs['height'],$caracs['length']);
-							if($x==$caracs['width']){
-								$y=min($caracs['height'],$caracs['length']);
-								if($y==$caracs['height']) $z=$caracs['length'];
-								else $z=$caracs['height'];
-							}
-							if($x==$caracs['height']){
-								$y=min($caracs['width'],$caracs['length']);
-								if($y==$caracs['width']) $z=$caracs['length'];
-								else $z=$caracs['width'];
-							}
-							if($x==$caracs['length']){
-								$y=min($caracs['height'],$caracs['width']);
-								if($y==$caracs['height']) $z=$caracs['width'];
-								else $z=$caracs['height'];
-							}
-							$data['weight_unit']=$caracs['weight_unit'];
-							$data['dimension_unit']=$caracs['dimension_unit'];
-							$tmpHeight=$data['height']+round($caracs['height'],2);
-							$tmpLength=$data['length']+round($caracs['length'],2);
-							$tmpWidth=$data['width']+round($caracs['width'],2);
-							$dim=$tmpLength+2*$tmpWidth+2*$tmpHeight;
-							if($data['weight']+round($caracs['weight'],2)>$limitation['weight'] || $dim>$limitation['dimension'] || $data['width']>$limitation['length']){
+							//Convert the unit of measurment if it's not the good one
+							$caracs=parent::_convertCharacteristics($product, $data);
+							//Group package algorithm :
+							$current_package = parent::groupPackages($data, $caracs);
+							if($data['weight']+round($caracs['weight'],2)>$limitation['weight'] || $current_package['dim']>$limitation['dimension'] || $data['width']>$limitation['length']){
 								$this->nbpackage++;
 								$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true );
 								//size and weight are reseted to the last package we didn't include
 								$data['weight']=round($caracs['weight'],2);
-								$data['height']=$y;
-								$data['length']=$z;
-								$data['width']=$x;
+								$data['height']=$current_package['y'];
+								$data['length']=$current_package['z'];
+								$data['width']=$current_package['x'];
 								$data['price']=$product->prices[0]->unit_price->price_value_with_tax;
 							}
 							else{
 								$data['weight']+=round($caracs['weight'],2);
-								$data['height']=max($data['height'],$y);
-								$data['length']=max($data['length'],$z);
-								$data['width']+=$x;
+								$data['height']=max($data['height'],$current_package['y']);
+								$data['length']=max($data['length'],$current_package['z']);
+								$data['width']+=$current_package['x'];
 								$data['price']+=$product->prices[0]->unit_price->price_value_with_tax;
 							}
 						}
@@ -628,7 +546,7 @@ function deleteZone(zoneName){
 		foreach($usableMethods as $i => $method){
 			$usableMethods[$i]['currency_id']=$currencyList->currency_id;
 		}
-		$usableMethods=$this->_currencyConversion($usableMethods, $order);
+		$usableMethods = parent::_currencyConversion($usableMethods, $order);
 
 		//print_r($usableMethods); exit;
 
@@ -638,7 +556,8 @@ function deleteZone(zoneName){
 	function _createPackage(&$data, &$product, &$rate, &$order, $includeDimension=false){
 
 		if(empty($data['weight'])){
-			$caracs=$this->_convertCharacteristics($product, $data);
+			//Convert the unit of measurment if it's not the good one
+			$caracs=parent::_convertCharacteristics($product, $data);
 			$data['weight_unit']=$caracs['weight_unit'];
 			$data['dimension_unit']=$caracs['dimension_unit'];
 			$data['weight']=round($caracs['weight'],2);
@@ -717,62 +636,6 @@ function deleteZone(zoneName){
 		$id++;
 		return $xml;
 	}
-	function _convertCharacteristics(&$product, $data, $forceUnit=false){
-		$weightClass=hikashop_get('helper.weight');
-		$volumeClass=hikashop_get('helper.volume');
-		if(!isset($product->product_dimension_unit_orig)) $product->product_dimension_unit_orig = $product->product_dimension_unit;
-		if(!isset($product->product_weight_unit_orig)) $product->product_weight_unit_orig = $product->product_weight_unit;
-		if(!isset($product->product_weight_orig)) $product->product_weight_orig = $product->product_weight;
-		if($forceUnit){
-			$carac['weight']=$weightClass->convert($product->product_weight_orig, $product->product_weight_unit_orig, 'lb');
-			$carac['weight_unit']='LBS';
-			$carac['height']=$volumeClass->convert($product->product_height, $product->product_dimension_unit_orig, 'in' , 'dimension');
-			$carac['length']=$volumeClass->convert($product->product_length, $product->product_dimension_unit_orig, 'in', 'dimension' );
-			$carac['width']=$volumeClass->convert($product->product_width, $product->product_dimension_unit_orig, 'in', 'dimension' );
-			$carac['dimension_unit']='IN';
-			return $carac;
-		}
-		if(@$data['units']=='kg'){
-			if($product->product_weight_unit_orig=='kg'){
-				$carac['weight']=$product->product_weight_orig;
-				$carac['weight_unit']=$this->convertUnit[$product->product_weight_unit_orig];
-			}else{
-				$carac['weight']=$weightClass->convert($product->product_weight_orig, $product->product_weight_unit_orig, 'kg');
-				$carac['weight_unit']='KGS';
-			}
-			if($product->product_dimension_unit_orig=='cm'){
-				$carac['height']=$product->product_height;
-				$carac['length']=$product->product_length;
-				$carac['width']=$product->product_width;
-				$carac['dimension_unit']=$this->convertUnit[$product->product_dimension_unit_orig];
-			}else{
-				$carac['height']=$volumeClass->convert($product->product_height, $product->product_dimension_unit_orig, 'cm' , 'dimension');
-				$carac['length']=$volumeClass->convert($product->product_length, $product->product_dimension_unit_orig, 'cm', 'dimension' );
-				$carac['width']=$volumeClass->convert($product->product_width, $product->product_dimension_unit_orig, 'cm', 'dimension' );
-				$carac['dimension_unit']='CM';
-			}
-		}else{
-			if($product->product_weight_unit_orig=='lb'){
-				$carac['weight']=$product->product_weight_orig;
-				$carac['weight_unit']=$this->convertUnit[$product->product_weight_unit_orig];
-			}else{
-				$carac['weight']=$weightClass->convert($product->product_weight, $product->product_weight_unit_orig, 'lb');
-				$carac['weight_unit']='LBS';
-			}
-			if($product->product_dimension_unit_orig=='in'){
-				$carac['height']=$product->product_height;
-				$carac['length']=$product->product_length;
-				$carac['width']=$product->product_width;
-				$carac['dimension_unit']=$this->convertUnit[$product->product_dimension_unit_orig];
-			}else{
-				$carac['height']=$volumeClass->convert($product->product_height, $product->product_dimension_unit_orig, 'in' , 'dimension');
-				$carac['length']=$volumeClass->convert($product->product_length, $product->product_dimension_unit_orig, 'in', 'dimension' );
-				$carac['width']=$volumeClass->convert($product->product_width, $product->product_dimension_unit_orig, 'in', 'dimension' );
-				$carac['dimension_unit']='IN';
-			}
-		}
-		return $carac;
-	}
 	function _FEDEXrequestMethods($data,$rate){
 		global $fedex_methods;
 
@@ -781,7 +644,7 @@ function deleteZone(zoneName){
 		ini_set("soap.wsdl_cache_enabled","0");
 		if(!class_exists('SoapClient')){
 			$app = JFactory::getApplication();
-			$app->enqueueMessage('The FEDEW shipping plugin needs the SOAP library installed but it seems that it is not available on your server. Please contact your web hosting to set it up.','error');
+			$app->enqueueMessage('The FEDEX shipping plugin needs the SOAP library installed but it seems that it is not available on your server. Please contact your web hosting to set it up.','error');
 			return false;
 		}
 		$client = new SoapClient($path_to_wsdl, array('exceptions' => false));
@@ -843,6 +706,12 @@ function deleteZone(zoneName){
 					'CountryCode' => $data['recipient']->address_country->zone_code_2,
 					'Residential' => true)
 			);
+			if(@$rate->shipping_params->destination_type=='res'){
+				$recipient['Address']['Residential'] = true;
+			}
+			if(@$rate->shipping_params->destination_type=='com' || (@$rate->shipping_params->destination_type=='auto' && $v == 'FEDEX_GROUND')){
+				$recipient['Address']['Residential'] = false;
+			}
 			$shippingChargesPayment = array(
 				'PaymentType' => 'SENDER', // valid values RECIPIENT, SENDER and THIRD_PARTY
 				'Payor' => array(
@@ -891,8 +760,8 @@ function deleteZone(zoneName){
 			}
 
 			//print_r($response); echo "<BR><BR>";
-
-			if(!empty($response->HighestSeverity) && ($response->HighestSeverity == "SUCCESS" || $response->HighestSeverity == "NOTE")) {
+			// NOTE and WARNING = SUCCESS + warning/note message
+			if(!empty($response->HighestSeverity) && ($response->HighestSeverity == "SUCCESS" || $response->HighestSeverity == "NOTE" || $response->HighestSeverity == "WARNING")) {
 				$code = '';
 				//echo "<BR><BR><BR>";
 				//echo "<pre>";
@@ -901,7 +770,7 @@ function deleteZone(zoneName){
 				//exit;
 
 				$notes = array();
-				if($response->HighestSeverity == "NOTE") {
+				if($response->HighestSeverity == "NOTE" || $response->HighestSeverity == "WARNING") {
 					$notes = $response->Notifications;
 				}
 
@@ -917,17 +786,43 @@ function deleteZone(zoneName){
 					$timestamp = 0;
 					$response->RateReplyDetails->DeliveryTimestamp=0;
 				}
+				$totalNetPrice = 0;
+				$discountAmount = 0;
 				if(is_array($response->RateReplyDetails->RatedShipmentDetails)){
+					$totalNetPrice = $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Amount;
+
+					if($request['RequestedShipment']['RateRequestTypes'] != 'ACCOUNT'){
+						$discountAmount = $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalFreightDiscounts->Amount;
+					}
 					$shipment[] = array(
-						'value'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Amount,
+						'value'=>$totalNetPrice + $discountAmount,
 						'code'=>$code,
 						'delivery_timestamp' => $timestamp,
 						'day'=>$response->RateReplyDetails->DeliveryTimestamp,
 						'delivery_day' => date("m/d/Y", $timestamp),
-						'delivery_delay' => $this->displayDelaySECtoDAY($timestamp - strtotime('now'),2),
+						'delivery_delay' => parent::displayDelaySECtoDAY($timestamp - strtotime('now'),2),
 						'delivery_time' => date("H:i:s", $timestamp),
 						'currency_code'=>$response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
 						'old_currency_code' => $response->RateReplyDetails->RatedShipmentDetails[0]->ShipmentRateDetail->TotalNetCharge->Currency,
+						'notes' => $notes
+					);
+
+				} else if(is_object($response->RateReplyDetails->RatedShipmentDetails)){
+					$totalNetPrice = $response->RateReplyDetails->RatedShipmentDetails->ShipmentRateDetail->TotalNetCharge->Amount;
+
+					if($request['RequestedShipment']['RateRequestTypes'] != 'ACCOUNT'){
+						$discountAmount = $response->RateReplyDetails->RatedShipmentDetails->ShipmentRateDetail->TotalFreightDiscounts->Amount;
+					}
+					$shipment[] = array(
+						'value'=>$totalNetPrice + $discountAmount,
+						'code'=>$code,
+						'delivery_timestamp' => $timestamp,
+						'day'=>$response->RateReplyDetails->DeliveryTimestamp,
+						'delivery_day' => date("m/d/Y", $timestamp),
+						'delivery_delay' => parent::displayDelaySECtoDAY($timestamp - strtotime('now'),2),
+						'delivery_time' => date("H:i:s", $timestamp),
+						'currency_code'=>$response->RateReplyDetails->RatedShipmentDetails->ShipmentRateDetail->TotalNetCharge->Currency,
+						'old_currency_code' => $response->RateReplyDetails->RatedShipmentDetails->ShipmentRateDetail->TotalNetCharge->Currency,
 						'notes' => $notes
 					);
 				}
@@ -956,52 +851,6 @@ function deleteZone(zoneName){
 			}
 		}
 		return $shipment;
-	}
-	function displayDelaySECtoDAY($value,$type){
-		//min
-		if ( $type == 0 ){
-			$value = (int) $value / 60;
-			$value = round($value);
-		}
-		//hour
-		if ( $type == 1 ){
-			$value = (int) $value / 3600;
-			$value = round($value);
-		}
-		//day
-		if ( $type == 2 ){
-			$value = (int) $value / 86400;
-			$value = round($value);
-		}
-		return $value;
-	}
-	function _currencyConversion(&$usableMethods, &$order){
-		$currency= $this->shipping_currency_id;
-		$currencyClass = hikashop_get('class.currency');
-		foreach($usableMethods as $i => $method){
-			if($method['currency_id']!=$currency){
-				$usableMethods[$i]['value']=$currencyClass->convertUniquePrice($method['value'],$method['currency_id'], $currency);
-				$usableMethods[$i]['old_currency_id']=$usableMethods[$i]['currency_id'];
-				$usableMethods[$i]['old_currency_code']=$usableMethods[$i]['currency_code'];
-				$usableMethods[$i]['currency_id']=$currency;
-				$usableMethods[$i]['currency_code']=$this->shipping_currency_code;
-			}
-		}
-		return $usableMethods;
-	}
-	function onShippingSave(&$cart,&$methods,&$shipping_id){
-		$usable_mehtods = array();
-		$errors = array();
-		$this->onShippingDisplay($cart,$methods,$usable_mehtods,$errors);
-		foreach($usable_mehtods as $k => $usable_method){
-			if($usable_method->shipping_id==$shipping_id){
-				return $usable_method;
-			}
-		}
-		return false;
-	}
-	function onAfterOrderConfirm(&$order,&$methods,$method_id){
-		return true;
 	}
 
 	function printSuccess($client, $response) {
