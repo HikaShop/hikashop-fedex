@@ -4,16 +4,6 @@ defined('_JEXEC') or die('Restricted access');
 <input type="hidden" name="lang_file_override" value="<?php echo @$this->element->shipping_params->lang_file_override;?>" />
 	<tr>
 		<td class="key">
-			<label for="shipping_tax_id">
-				<?php echo JText::_( 'TAXATION_CATEGORY' ); ?>
-			</label>
-		</td>
-		<td>
-			<?php echo $this->data['categoryType']->display('data[shipping][shipping_tax_id]',@$this->element->shipping_tax_id,true);?>
-		</td>
-	</tr>
-	<tr>
-		<td class="key">
 			<label for="data[shipping][shipping_params][origination_postcode]">
 				<?php echo JText::_( 'FEDEX_ORIGINATION_POSTCODE' ); ?>
 			</label>
@@ -142,13 +132,19 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<span id="state_zone">
-				<?php if(!empty($this->element->shipping_params->sender_state)){ echo $this->element->shipping_params->sender_state;} ?>
-				<input type="hidden" name="data[shipping][shipping_params][sender_state]" value="<?php echo @$this->element->shipping_params->sender_state ?>"/>
-			</span>
-			<a class="modal" rel="{handler: 'iframe', size: {x: 760, y: 480}}" href="<?php echo hikashop_completeLink("zone&task=selectchildlisting&type=shipping&subtype=state_zone&map=data[shipping][shipping_params][sender_state]&tmpl=component"); ?>" >
-				<img src="<?php echo HIKASHOP_IMAGES; ?>edit.png"/>
-			</a>
+			<?php
+				echo $this->data['nameboxType']->display(
+					'data[shipping][shipping_params][sender_state]',
+					@$this->element->shipping_params->sender_state,
+					hikashopNameboxType::NAMEBOX_SINGLE,
+					'zone',
+					array(
+						'delete' => true,
+						'default_text' => '<em>'.JText::_('HIKA_NONE').'</em>',
+						'zone_types' => array('state' => 'STATE'),
+					)
+				);
+			?>
 		</td>
 	</tr>
 	<tr>
@@ -158,13 +154,19 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<span id="country_zone">
-				<?php if(!empty($this->element->shipping_params->sender_country)){ echo $this->element->shipping_params->sender_country;} ?>
-				<input type="hidden" name="data[shipping][shipping_params][sender_country]" value="<?php echo @$this->element->shipping_params->sender_country ?>"/>
-			</span>
-			<a class="modal" rel="{handler: 'iframe', size: {x: 760, y: 480}}" href="<?php echo hikashop_completeLink("zone&task=selectchildlisting&type=shipping&subtype=country_zone&map=data[shipping][shipping_params][sender_country]&tmpl=component"); ?>" >
-				<img src="<?php echo HIKASHOP_IMAGES; ?>edit.png"/>
-			</a>
+			<?php
+				echo $this->data['nameboxType']->display(
+					'data[shipping][shipping_params][sender_country]',
+					@$this->element->shipping_params->sender_country,
+					hikashopNameboxType::NAMEBOX_SINGLE,
+					'zone',
+					array(
+						'delete' => true,
+						'default_text' => '<em>'.JText::_('HIKA_NONE').'</em>',
+						'zone_types' => array('country' => 'COUNTRY'),
+					)
+				);
+			?>
 		</td>
 	</tr>
 	<tr>
@@ -226,17 +228,13 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input class="inputbox" type="checkbox" name="data[shipping][shipping_params][show_eta_format]" <?php
-				if (@$this->element->shipping_params->show_eta_format=="24") {
-					echo 'checked="checked"';
-				}
-				?> value="24" /> 24 hour
-			<input class="inputbox" type="checkbox" name="data[shipping][shipping_params][show_eta_format]" <?php
-			if (@$this->element->shipping_params->show_eta_format=="12") {
-				echo 'checked="checked"';
-			}
-			?> value="24" /> 12 hour
-		</td>
+			<?php
+				$arr = array(
+					JHTML::_('select.option', '12', '12 Hour' ),
+					JHTML::_('select.option', '24', '24 Hour' ),
+				);
+				echo JHTML::_('hikaselect.genericlist', $arr, "data[shipping][shipping_params][show_eta_format]", 'class="inputbox" size="1"', 'value', 'text', @$this->element->shipping_params->show_eta_format);
+			?>
 	</tr>
 	<tr>
 		<td class="key">
@@ -292,7 +290,7 @@ defined('_JEXEC') or die('Restricted access');
 			</label>
 		</td>
 		<td>
-			<input size="5" type="text" name="data[shipping][shipping_params][weight_approximation]" value="<?php echo @$this->element->shipping_params->weight_approximation; ?>" />
+			<input size="5" type="text" name="data[shipping][shipping_params][weight_approximation]" value="<?php echo @$this->element->shipping_params->weight_approximation; ?>" />%
 		</td>
 	</tr>
 	<tr>
@@ -329,4 +327,14 @@ defined('_JEXEC') or die('Restricted access');
 			<?php echo JHTML::_('hikaselect.booleanlist', "data[shipping][shipping_params][group_package]" , '',@$this->element->shipping_params->group_package	); ?>
 		</td>
 	</tr>
+	<tr>
+	<td class="key">
+		<label for="data[shipping][shipping_params][debug]"><?php
+			echo JText::_('DEBUG');
+		?></label>
+	</td>
+	<td><?php
+		echo JHTML::_('hikaselect.booleanlist', "data[shipping][shipping_params][debug]" , '', @$this->element->shipping_params->debug);
+	?></td>
+</tr>
 </fieldset>

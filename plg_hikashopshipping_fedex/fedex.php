@@ -69,6 +69,7 @@ class plgHikashopshippingFedEx extends hikashopShippingPlugin {
 			return false;
 		$currentShippingZone = null;
 		$currentCurrencyId = null;
+		$currencyClass=hikashop_get('class.currency');
 		foreach($local_usable_rates as $k => $rate){
 			if(empty($rate->shipping_params->methodsList)) {
 				$messages['no_shipping_methods_configured'] = 'No shipping methods configured in the FedEx shipping plugin options';
@@ -149,7 +150,10 @@ class plgHikashopshippingFedEx extends hikashopShippingPlugin {
 					}
 					$sep = '<br/>';
 					if($method['delivery_time']!=-1 && $method['day']>0){
-						$local_usable_rates[$i]->shipping_description.=$sep.JText::sprintf( 'DELIVERY_HOUR', $method['delivery_time']);
+						if(@$rate->shipping_params->show_eta_format == '12')
+							$local_usable_rates[$i]->shipping_description.=$sep.JText::sprintf( 'DELIVERY_HOUR', date('h:i:s a', strtotime($method['delivery_time'])));
+						else
+							$local_usable_rates[$i]->shipping_description.=$sep.JText::sprintf( 'DELIVERY_HOUR', $method['delivery_time']);
 					}else{
 						$local_usable_rates[$i]->shipping_description.=$sep.JText::_( 'NO_DELIVERY_HOUR');
 					}
@@ -167,6 +171,12 @@ class plgHikashopshippingFedEx extends hikashopShippingPlugin {
 				$i++;
 			}
 			foreach($local_usable_rates as $i => $finalRate){
+				if(isset($finalRate->shipping_price_orig) || isset($finalRate->shipping_currency_id_orig)){
+					if($finalRate->shipping_currency_id_orig == $finalRate->shipping_currency_id)
+						$finalRate->shipping_price_orig = $finalRate->shipping_price;
+					else
+						$finalRate->shipping_price_orig = $currencyClass->convertUniquePrice($finalRate->shipping_price, $finalRate->shipping_currency_id, $finalRate->shipping_currency_id_orig);
+				}
 				$usable_rates[$finalRate->shipping_id]=$finalRate;
 			}
 		}
@@ -175,6 +185,7 @@ class plgHikashopshippingFedEx extends hikashopShippingPlugin {
 		$element->shipping_name='FedEx';
 		$element->shipping_description='';
 		$element->group_package=0;
+		$element->debug=0;
 		$element->shipping_images='fedex';
 		$element->shipping_params->post_code='';
 		$element->shipping_currency_id = $this->main_currency;
@@ -183,61 +194,19 @@ class plgHikashopshippingFedEx extends hikashopShippingPlugin {
 	}
 	function onShippingConfiguration(&$element){
 		$config =& hikashop_config();
-		$this -> main_currency = $config -> get('main_currency', 1);
+		$this->main_currency = $config->get('main_currency', 1);
 		$currencyClass = hikashop_get('class.currency');
 		$currency = hikashop_get('class.currency');
-		$this -> currencyCode = $currency -> get($this -> main_currency)->currency_code;
-		$this -> currencySymbol = $currency -> get($this -> main_currency)->currency_symbol;
+		$this->currencyCode = $currency->get($this->main_currency)->currency_code;
+		$this->currencySymbol = $currency->get($this->main_currency)->currency_symbol;
 		$this->fedex = JRequest::getCmd('name','fedex');
 		$this->categoryType = hikashop_get('type.categorysub');
 		$this->categoryType->type = 'tax';
 		$this->categoryType->field = 'category_id';
+		$this->nameboxType = hikashop_get('type.namebox');
 
 		parent::onShippingConfiguration($element);
 
-		$elements = array($element);
-		$key = key($elements);
-		if(empty($elements[$key]->shipping_params->lang_file_override)){
-			jimport('joomla.filesystem.file');
-			jimport('joomla.filesystem.folder');
-			$folder = JLanguage::getLanguagePath(JPATH_ROOT).DS.'overrides';
-
-			$path = $folder.DS.'en-GB.override.ini';
-			$content_override='';
-			if(JFile::exists($path)){
-				$content_override=JFile::read($path);
-			}
-			$content_override .= '
-FEDEX_METER_ID="Meter #"'.'
-FEDEX_ACCOUNT_NUMBER="Account #"'.'
-FEDEX_API_KEY="API Key"'.'
-FEDEX_API_PASSWORD="API Password"'.'
-FEDEX_SHOW_ETA="Show ETA?"'.'
-FEDEX_SHOW_ETA_FORMAT="ETA Format"'.'
-PACKAGING_TYPE="Packaging Type"'.'
-BOX_DIMENSIONS="Box Dimensions"'.'
-ORIGINATION_POSTCODE="Ship From Postcode"'.'
-SENDER_COMPANY="Sender Company"'.'
-SENDER_PHONE="Sender Phone"'.'
-SENDER_ADDRESS="Sender Address"'.'
-SENDER_CITY="Sender City"'.'
-SENDER_STATE="Sender State"'.'
-SENDER_POSTCODE="Sender Zip"';
-
-			if(!JFolder::exists($folder)){
-				JFolder::create($folder);
-			}
-			if(JFolder::exists($folder)){
-				$path = $folder.DS.'en-GB.override.ini';
-				$result = JFile::write($path, $content_override);
-				if(!$result){
-					hikashop_display(JText::sprintf('FAIL_SAVE',$path),'error');
-				}else {
-					$elements[$key]->shipping_params->lang_file_override = 1;
-				}
-
-			}
-		}
 		$js="
 			function checkAllBox(id, type){
 				var toCheck = document.getElementById(id).getElementsByTagName('input');
@@ -262,18 +231,18 @@ SENDER_POSTCODE="Sender Zip"';
 	function onShippingConfigurationSave(&$element){
 		$app = JFactory::getApplication();
 		$methods=array();
-		if(empty($element -> shipping_params -> account_number) ||
-			empty($element -> shipping_params -> origination_postcode) ||
-			empty($element -> shipping_params -> meter_id) ||
-			empty($element -> shipping_params -> api_key) ||
-			empty($element -> shipping_params -> api_password) ||
-			empty($element -> shipping_params -> sender_company) ||
-			empty($element -> shipping_params -> sender_phone) ||
-			empty($element -> shipping_params -> sender_address) ||
-			empty($element -> shipping_params -> sender_city) ||
-			empty($element -> shipping_params -> sender_state) ||
-			empty($element -> shipping_params -> sender_country) ||
-			empty($element -> shipping_params -> sender_postcode)
+		if(empty($element->shipping_params->account_number) ||
+			empty($element->shipping_params->origination_postcode) ||
+			empty($element->shipping_params->meter_id) ||
+			empty($element->shipping_params->api_key) ||
+			empty($element->shipping_params->api_password) ||
+			empty($element->shipping_params->sender_company) ||
+			empty($element->shipping_params->sender_phone) ||
+			empty($element->shipping_params->sender_address) ||
+			empty($element->shipping_params->sender_city) ||
+			empty($element->shipping_params->sender_state) ||
+			empty($element->shipping_params->sender_country) ||
+			empty($element->shipping_params->sender_postcode)
 		 ){
 			$app->enqueueMessage(JText::sprintf('ENTER_INFO', 'FedEx', JText::_('SENDER_INFORMATIONS').' ('. JText::_( 'FEDEX_ORIGINATION_POSTCODE' ).', '.JText::_( 'FEDEX_ACCOUNT_NUMBER' ).', '.JText::_( 'FEDEX_METER_ID' ).', '.JText::_( 'FEDEX_API_KEY' ).', '.JText::_( 'HIKA_PASSWORD' ).', '.JText::_( 'COMPANY' ).', '.JText::_( 'TELEPHONE' ).', '.JText::_( 'ADDRESS' ).', '.JText::_( 'CITY' ).', '.JText::_( 'COUNTRY' ).', '.JText::_( 'POST_CODE' ).')'));
 		}
@@ -332,18 +301,25 @@ SENDER_POSTCODE="Sender Zip"';
 		$data['sender_phone']=@$rate->shipping_params->sender_phone;
 		$data['sender_address']=@$rate->shipping_params->sender_address;
 		$data['sender_city']=@$rate->shipping_params->sender_city;
-			$state_zone = '';
+
+		$state_zone = '';
 		$state_zone=@$rate->shipping_params->sender_state;
-			$query="SELECT zone_id, zone_code_3 FROM ".hikashop_table('zone')." WHERE zone_namekey IN (".$db->Quote($state_zone).")";
-			$db->setQuery($query);
-			$state = $db->loadObject();
-		$data['sender_state']=$state->zone_code_3;
+		$query="SELECT zone_id, zone_code_2, zone_code_3 FROM ".hikashop_table('zone')." WHERE zone_namekey IN (".$db->Quote($state_zone).")";
+		$db->setQuery($query);
+		$state = $db->loadObject();
+		$data['sender_state'] = '';
+		if(isset($state->zone_code_2) && strlen($state->zone_code_2) == 2)
+			$data['sender_state'] = $state->zone_code_2;
+		elseif(strlen($state->zone_code_3) == 2)
+			$data['sender_state']=$state->zone_code_3;
+
 		$data['sender_postcode']=$rate->shipping_params->sender_postcode;
 		$data['recipient']=$null->shipping_address;
-			$czone_code = '';
-			$czone_code=@$rate->shipping_params->sender_country;
-			$query="SELECT zone_id, zone_code_2 FROM ".hikashop_table('zone')." WHERE zone_namekey IN (".$db->Quote($czone_code).")";
-			$db->setQuery($query);
+
+		$czone_code = '';
+		$czone_code=@$rate->shipping_params->sender_country;
+		$query="SELECT zone_id, zone_code_2 FROM ".hikashop_table('zone')." WHERE zone_namekey IN (".$db->Quote($czone_code).")";
+		$db->setQuery($query);
 		$czone = $db->loadObject();
 		$data['country'] = $czone->zone_code_2;
 
@@ -356,8 +332,8 @@ SENDER_POSTCODE="Sender Zip"';
 			$data['destType']='<ResidentialAddressIndicator/>';
 		}*/
 		$data['pickup_type']=@$rate->shipping_params->pickup_type;
-		$totalPrice=0;
-		if(($this->freight==true && $this->classicMethod==false) || ($heavyProduct==true && $this->freight==true)){
+		$this->nbpackage = 0;
+		if(!$rate->shipping_params->group_package || $rate->shipping_params->group_package == 0){
 			$data['weight']=0;
 			$data['height']=0;
 			$data['length']=0;
@@ -378,7 +354,7 @@ SENDER_POSTCODE="Sender Zip"';
 								$data['width']+=round($caracs['width'],2)*$variant->cart_product_quantity;
 							}
 
-							$data['price']+=$variant->prices[0]->unit_price->price_value_with_tax*$variant->cart_product_quantity;
+							$data['price']+=$variant->prices[0]->price_value_with_tax*$variant->cart_product_quantity;
 						}
 					}
 					else{
@@ -392,17 +368,19 @@ SENDER_POSTCODE="Sender Zip"';
 							$data['length']+=round($caracs['length'],2)*$product->cart_product_quantity;
 							$data['width']+=round($caracs['width'],2)*$product->cart_product_quantity;
 						}
-						$data['price']+=$product->prices[0]->unit_price->price_value_with_tax*$product->cart_product_quantity;
+						$data['price']+=$product->prices[0]->price_value_with_tax*$product->cart_product_quantity;
 					}
 				}
 			}
-			$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order );
+			if(($this->freight==true && $this->classicMethod==false) || ($heavyProduct==true && $this->freight==true))
+				$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order );
+			else
+				$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true );
 
-			$usableMethods=$this->_FEDEXrequestMethods($data);
+			$usableMethods=$this->_FEDEXrequestMethods($data,$rate);
 			return $usableMethods;
 		}
-
-		if(@$rate->shipping_params->group_package){
+		else{
 			$data['weight']=0;
 			$data['height']=0;
 			$data['length']=0;
@@ -459,14 +437,14 @@ SENDER_POSTCODE="Sender Zip"';
 									$data['height']=$current_package['y'];
 									$data['length']=$current_package['z'];
 									$data['width']=$current_package['x'];
-									$data['price']=$variant->prices[0]->unit_price->price_value_with_tax;
+									$data['price']=$variant->prices[0]->price_value_with_tax;
 								}
 								else{
 									$data['weight']+=round($caracs['weight'],2);
 									$data['height']=max($data['height'],$current_package['y']);
 									$data['length']=max($data['length'],$current_package['z']);
 									$data['width']+=$current_package['x'];
-									$data['price']+=$variant->prices[0]->unit_price->price_value_with_tax;
+									$data['price']+=$variant->prices[0]->price_value_with_tax;
 								}
 							}
 						}
@@ -486,14 +464,14 @@ SENDER_POSTCODE="Sender Zip"';
 								$data['height']=$current_package['y'];
 								$data['length']=$current_package['z'];
 								$data['width']=$current_package['x'];
-								$data['price']=$product->prices[0]->unit_price->price_value_with_tax;
+								$data['price']=$product->prices[0]->price_value_with_tax;
 							}
 							else{
 								$data['weight']+=round($caracs['weight'],2);
 								$data['height']=max($data['height'],$current_package['y']);
 								$data['length']=max($data['length'],$current_package['z']);
 								$data['width']+=$current_package['x'];
-								$data['price']+=$product->prices[0]->unit_price->price_value_with_tax;
+								$data['price']+=$product->prices[0]->price_value_with_tax;
 							}
 						}
 					}
@@ -504,32 +482,6 @@ SENDER_POSTCODE="Sender Zip"';
 				$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true);
 			}
 			$usableMethods=$this->_FEDEXrequestMethods($data,$rate);
-		}
-		else{
-			foreach($order->products as $product){
-				$data['weight']=0;
-				$data['height']=0;
-				$data['length']=0;
-				$data['width']=0;
-				//$data['price']=0;
-				if($product->product_parent_id==0){
-					if(isset($product->variants)){
-						foreach($product->variants as $variant){
-							for($i=0;$i<$variant->cart_product_quantity;$i++){
-								$data['XMLpackage'].=$this->_createPackage($data, $variant, $rate, $order, true);
-							}
-						}
-					}
-					else{
-						for($i=0;$i<$product->cart_product_quantity;$i++){
-							$data['XMLpackage'].=$this->_createPackage($data, $product, $rate, $order, true );
-						}
-					}
-				}
-			}
-
-			$usableMethods=$this->_FEDEXrequestMethods($data,$rate);
-
 		}
 		if(empty($usableMethods)){
 			return false;
@@ -554,7 +506,6 @@ SENDER_POSTCODE="Sender Zip"';
 	}
 
 	function _createPackage(&$data, &$product, &$rate, &$order, $includeDimension=false){
-
 		if(empty($data['weight'])){
 			//Convert the unit of measurment if it's not the good one
 			$caracs=parent::_convertCharacteristics($product, $data);
@@ -567,7 +518,8 @@ SENDER_POSTCODE="Sender Zip"';
 				$data['width']=round($caracs['width'],2);
 			}
 		}
-
+		if($data['weight_unit'] == 'KGS') $data['weight_unit'] = 'KG';
+		if($data['weight_unit'] == 'LBS') $data['weight_unit'] = 'LB';
 		$currencyClass=hikashop_get('class.currency');
 		$config =& hikashop_config();
 		$this->main_currency = $config->get('main_currency',1);
@@ -576,7 +528,7 @@ SENDER_POSTCODE="Sender Zip"';
 			$price=$data['price'];
 		}
 		else{
-			$price=$product->prices[0]->unit_price->price_value;
+			$price=$product->prices[0]->price_value;
 		}
 		if(@$this->shipping_currency_id!=@$data['currency'] && !empty($data['currency'])){
 			$price=$currencyClass->convertUniquePrice($price, $this->shipping_currency_id,@$data['currency']);
@@ -691,7 +643,11 @@ SENDER_POSTCODE="Sender Zip"';
 					'CountryCode' => $data['country'])
 			);
 
-
+			$recipient_StateOrProvinceCode = '';
+			if(isset($data['recipient']->address_state->zone_code_2) && strlen($data['recipient']->address_state->zone_code_2) == 2)
+				$recipient_StateOrProvinceCode = $data['recipient']->address_state->zone_code_2;
+			elseif(strlen($data['recipient']->address_state->zone_code_3) == 2)
+				$recipient_StateOrProvinceCode = $data['recipient']->address_state->zone_code_3;
 			$recipient = array(
 				'Contact' => array(
 					'PersonName' => $data['recipient']->address_title." ".$data['recipient']->address_firstname." ".$data['recipient']->address_lastname,
@@ -701,7 +657,7 @@ SENDER_POSTCODE="Sender Zip"';
 				'Address' => array(
 					'StreetLines' => array($data['recipient']->address_street),
 					'City' => $data['recipient']->address_city,
-					'StateOrProvinceCode' => $data['recipient']->address_state->zone_code_3,
+					'StateOrProvinceCode' => $recipient_StateOrProvinceCode,
 					'PostalCode' => $data['recipient']->address_post_code,
 					'CountryCode' => $data['recipient']->address_country->zone_code_2,
 					'Residential' => true)
@@ -723,10 +679,6 @@ SENDER_POSTCODE="Sender Zip"';
 			$pkg_values = $pkg_values['root'];
 			$pkg_count = count($pkg_values);
 
-	//	echo( '<pre>'.htmlentities($data['XMLpackage']).'</pre>' );
-	//	echo( '<pre>'.var_export($pkg_values, true).'</pre>' );
-	//	exit;
-
 			$request['RequestedShipment']['Shipper'] = $shipper;
 			$request['RequestedShipment']['Recipient'] = $recipient;
 			$request['RequestedShipment']['ShippingChargesPayment'] = $shippingChargesPayment;
@@ -737,14 +689,17 @@ SENDER_POSTCODE="Sender Zip"';
 			$request['RequestedShipment']['PackageCount'] = $pkg_count;
 			$request['RequestedShipment']['RequestedPackageLineItems'] = $this->addPackageLineItem($pkg_values);
 
+			if(@$rate->shipping_params->debug){
+				echo "<br/> Request $v : <br/>";
+				echo '<pre>' . var_export($request, true) . '</pre>';
+			}
+
 	//		echo( '<pre>'.var_export($request, true).'</pre>' );
 
 	//		try {
 				$response = $client->getRates($request);
 	//		}
 	//		catch(SoapFault $e) { }
-
-	//		echo( '<pre>'.var_export($response, true).'</pre>' );
 
 			if(isset($response->HighestSeverity) && $response->HighestSeverity == "ERROR") {
 				static $notif = false;
@@ -753,22 +708,18 @@ SENDER_POSTCODE="Sender Zip"';
 					$app->enqueueMessage('FEDEX Authentication Failed');
 					$notif = true;
 				}
-			//	if(!empty($response->Notifications->Message) && $response->Notifications->Message != 'Authentication Failed') {
-			//		$app =& JFactory::getApplication();
-			//		$app->enqueueMessage($response->Notifications->Message);
-			//	}
+				if(!$notif && !empty($response->Notifications->Message) && strpos($response->Notifications->Message,'Service is not allowed') === FALSE) {
+					$app = JFactory::getApplication();
+					$app->enqueueMessage('The FedEx request failed with the message : ' . $response->Notifications->Message);
+				}
 			}
-
-			//print_r($response); echo "<BR><BR>";
+			if(@$rate->shipping_params->debug){
+				echo "<br/> Response $v : <br/>";
+				echo '<pre>' . var_export($response, true) . '</pre>';
+			}
 			// NOTE and WARNING = SUCCESS + warning/note message
 			if(!empty($response->HighestSeverity) && ($response->HighestSeverity == "SUCCESS" || $response->HighestSeverity == "NOTE" || $response->HighestSeverity == "WARNING")) {
 				$code = '';
-				//echo "<BR><BR><BR>";
-				//echo "<pre>";
-				//print_r($response);
-				//echo "</pre>";
-				//exit;
-
 				$notes = array();
 				if($response->HighestSeverity == "NOTE" || $response->HighestSeverity == "WARNING") {
 					$notes = $response->Notifications;
@@ -986,7 +937,7 @@ SENDER_POSTCODE="Sender Zip"';
 	function printError($client, $response){
 		echo '<h2>Error returned in processing transaction</h2>';
 		echo "\n";
-		printNotifications($response -> Notifications);
+		printNotifications($response->Notifications);
 		printRequestResponse($client, $response);
 	}
 
